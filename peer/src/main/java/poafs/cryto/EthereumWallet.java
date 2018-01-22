@@ -25,6 +25,7 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.WalletUtils;
 
+import poafs.Application;
 import poafs.exception.KeyException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
@@ -104,6 +105,7 @@ public class EthereumWallet implements IEncrypter, IDecrypter {
 	 */
 	private SecretKey unwrapKey(byte[] wrappedKey) throws KeyException {
 		try {
+			dsa.init(Cipher.UNWRAP_MODE, privateKey);
 			return (SecretKey)dsa.unwrap(wrappedKey, Reference.AES_CIPHER, Cipher.SECRET_KEY);
 		} catch (Exception e) {
 			throw new KeyException();
@@ -132,9 +134,20 @@ public class EthereumWallet implements IEncrypter, IDecrypter {
 	
 	@Override
 	public EncryptedFileBlock encrypt(FileBlock block) throws KeyException {
-		//TODO 
-		
-		return null;
+		try {
+			SecretKey aesKey = block.getKey();
+			
+			aes.init(Cipher.ENCRYPT_MODE, aesKey);
+			
+			byte[] encryptedContent = aes.doFinal(block.getContent());
+			
+			dsa.init(Cipher.WRAP_MODE, publicKey);
+			byte[] wrappedKey = dsa.wrap(aesKey);
+			
+			return new EncryptedFileBlock(Application.getPropertiesManager().getPeerId(), encryptedContent, block.getIndex(), wrappedKey);
+		} catch (Exception e) {
+			throw new KeyException();
+		}
 	}
 
 }

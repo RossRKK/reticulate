@@ -9,6 +9,8 @@ import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
 
+import org.web3j.crypto.CipherException;
+
 import com.sun.jna.NativeLibrary;
 
 import poafs.adapter.WebServer;
@@ -41,84 +43,63 @@ public class Application {
 		try {
 			pm.loadProperties();
 			
-			net = new Network(args[0], Integer.parseInt(args[1]), Boolean.parseBoolean(args[2]));
+			net = new Network(args[0], args[1]);
 			
 			new Thread(new WebServer(8080, net)).start();
 			
 			//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
 			new NativeDiscovery().discover();
 	        
-			
 			ui();
-		} catch (ProtocolException e) {
+		} catch (ProtocolException | CipherException e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 	}
 	
 	private static void ui() {
+		boolean exit = false;
 		
-		System.out.println("User Name: ");
-		String user = sc.nextLine();
-		
-		System.out.println("Password: ");
-		String pass = sc.nextLine();
-		
-		boolean authorised = false;
-		try {
-			authorised = net.login(user, pass);
-		} catch (ProtocolException | KeyException e) {
-			System.err.println(e.getMessage());
-		}
-		
-		if (authorised) {
-			System.out.println("Logged in.");
-		
-			boolean exit = false;
-			
-			while (!exit) {
-				String command = sc.nextLine();
-				switch (command) {
-					case "ls":
-						try {
-							listFiles(net.listFiles());
-						} catch (ProtocolException e) {
-							System.err.println(e.getMessage());
-						}
-						break;
-					case "load":
-						printFile(net.fetchFile(sc.nextLine()));
-						break;
-					case "save":
-						saveFile(net.fetchFile(sc.nextLine()));
-						break;
-					case "register-file":
-						try {
-							net.registerFile(sc.nextLine(), sc.nextLine());
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-						break;
-					case "play":
-						PoafsFileStream stream = net.fetchFile(sc.nextLine());
-						SwingUtilities.invokeLater(new Runnable() {
-				            @Override
-				            public void run() {
-				                new VideoPlayer(stream);
-				            }
-				        });
-						break;
-					case "exit":
-					case "quit":
-						exit = true;
-						break;
-					default:
-						System.out.println("Unrecognised Command");
-				}
-				
+		while (!exit) {
+			String command = sc.nextLine();
+			switch (command) {
+				case "ls":
+					try {
+						listFiles(net.listFiles());
+					} catch (ProtocolException e) {
+						System.err.println(e.getMessage());
+					}
+					break;
+				case "load":
+					printFile(net.fetchFile(sc.nextLine()));
+					break;
+				case "save":
+					saveFile(net.fetchFile(sc.nextLine()));
+					break;
+				case "register-file":
+					try {
+						net.registerFile(sc.nextLine(), sc.nextLine());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					break;
+				case "play":
+					PoafsFileStream stream = net.fetchFile(sc.nextLine());
+					SwingUtilities.invokeLater(new Runnable() {
+			            @Override
+			            public void run() {
+			                new VideoPlayer(stream);
+			            }
+			        });
+					break;
+				case "exit":
+				case "quit":
+					exit = true;
+					break;
+				default:
+					System.out.println("Unrecognised Command");
 			}
-		} else {
-			System.out.println("Error authenticating");
+			
 		}
 		
 		sc.close();

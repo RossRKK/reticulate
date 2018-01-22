@@ -13,9 +13,11 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import org.web3j.crypto.CipherException;
+
+import poafs.auth.EthAuth;
 import poafs.auth.IAuthenticator;
-import poafs.auth.NetAuthenticator;
-import poafs.cryto.IEncrypter;
+import poafs.cryto.EthereumWallet;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
@@ -23,6 +25,8 @@ import poafs.file.FileBlock;
 import poafs.file.FileManager;
 import poafs.file.FileMeta;
 import poafs.file.PoafsFile;
+import poafs.file.tracking.DummyTracker;
+import poafs.file.tracking.ITracker;
 import poafs.lib.Reference;
 import poafs.net.Server;
 
@@ -46,26 +50,23 @@ public class Network {
 	/**
 	 * The encrypter to be used for all local files.
 	 */
-	private IEncrypter localEncrypter;
+	private EthereumWallet wallet;
+	
+	private ITracker tracker;
 	
 	/**
 	 * The file system manager.
 	 */
 	private FileManager fileManager = new FileManager();
 	
-	public Network(String hostname, int port, boolean ssl) throws ProtocolException {
-		this.auth = new NetAuthenticator(hostname, port, ssl);
+	public Network(String path, String pass) throws ProtocolException, IOException, CipherException {
+		//this.auth = new NetAuthenticator(hostname, port, ssl);
+		this.auth = new EthAuth();
+		wallet = new EthereumWallet(path, pass);
+		tracker = new DummyTracker();
 		
 		//start the local server
 		new Thread(new Server(Reference.DEFAULT_PORT, fileManager)).start();
-	}
-	
-	public boolean login(String user, String pass) throws ProtocolException, KeyException {
-		boolean authorised =  auth.authoriseUser(user, pass);
-		
-		localEncrypter = auth.registerPeer();
-		
-		return authorised;
 	}
 	
 	/**
@@ -101,7 +102,7 @@ public class Network {
 			byte[] contents = Arrays.copyOfRange(bytes, i * blockLength, i * blockLength + thisBlockLength);
 			
 			FileBlock block = new FileBlock(id, contents, i);
-			EncryptedFileBlock encrypted = localEncrypter.encrypt(block);
+			EncryptedFileBlock encrypted = wallet.encrypt(block);
 			
 			file.addBlock(encrypted);
 		}
@@ -119,6 +120,6 @@ public class Network {
 	}
 	
 	public PoafsFileStream fetchFile(String fileId) {
-		return new PoafsFileStream(fileId, 5, auth);
+		return new PoafsFileStream(fileId, 5, auth, wallet, tracker);
 	}
 }

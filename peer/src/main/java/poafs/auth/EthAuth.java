@@ -1,10 +1,11 @@
 package poafs.auth;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.http.HttpService;
+
 import poafs.cryto.IDecrypter;
-import poafs.cryto.IEncrypter;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.FileMeta;
@@ -16,6 +17,12 @@ import poafs.file.PoafsFile;
  *
  */
 public class EthAuth implements IAuthenticator {
+	
+	private Web3j web3j;
+	
+	public EthAuth() {
+		web3j = Web3j.build(new HttpService("https://rinkeby.infura.io/kMVN82WbWTrThVdoRsKH"));
+	}
 
 	@Override
 	public IDecrypter getKeyForFile(String fileId) throws ProtocolException, KeyException {

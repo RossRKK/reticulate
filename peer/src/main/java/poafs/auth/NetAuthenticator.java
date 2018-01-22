@@ -90,7 +90,6 @@ public class NetAuthenticator implements IAuthenticator {
 		return line;
 	}
 
-	@Override
 	public synchronized IDecrypter getKeyForPeer(String peerId) throws KeyException, ProtocolException {
 		try {
 			out.println("private-key " + peerId);
@@ -136,7 +135,6 @@ public class NetAuthenticator implements IAuthenticator {
 		}
 	}
 	
-	@Override
 	public synchronized boolean authoriseUser(String userName, String password) throws ProtocolException {
 		try {
 			out.println("login " + userName);
@@ -199,7 +197,6 @@ public class NetAuthenticator implements IAuthenticator {
 		}
 	}
 
-	@Override
 	public synchronized List<String> findBlock(String fileId, int blockIndex) throws ProtocolException {
 		try {
 			out.println("find-block " + fileId + ":" + blockIndex);
@@ -236,7 +233,6 @@ public class NetAuthenticator implements IAuthenticator {
 		}
 	}
 
-	@Override
 	public synchronized IEncrypter registerPeer() throws ProtocolException, KeyException {
 		
 		
@@ -265,8 +261,13 @@ public class NetAuthenticator implements IAuthenticator {
 		}
 	}
 
-	@Override
 	public synchronized void registerTransfer(String fileId, int index) {
 		out.println("register-transfer " + fileId + ":" + index);
+	}
+
+	@Override
+	public IDecrypter getKeyForFile(String fileId) throws ProtocolException, KeyException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

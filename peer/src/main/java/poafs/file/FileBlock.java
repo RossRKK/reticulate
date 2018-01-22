@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Base64;
 
+import javax.crypto.SecretKey;
+
 /**
  * A class that represents a single block of a file from a remote peer.
  * @author rossrkk
@@ -34,6 +36,19 @@ public class FileBlock {
 	 * The position this block has in the file.
 	 */
 	protected int index;
+	
+	/**
+	 * The key this block should be encrypted with.
+	 */
+	private SecretKey key;
+	
+	/**
+	 * Get the key to encrypt the block with.
+	 * @return The key to encrypt the block with.
+	 */
+	public SecretKey getKey() {
+		return key;
+	}
 
 	public String getOriginPeerId() {
 		return originPeerId;

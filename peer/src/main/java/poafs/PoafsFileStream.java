@@ -3,15 +3,9 @@ package poafs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import poafs.auth.IAuthenticator;
 import poafs.cryto.IDecrypter;
@@ -21,6 +15,7 @@ import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
 import poafs.file.FileMeta;
+import poafs.file.tracking.ITracker;
 import poafs.peer.IPeer;
 import poafs.peer.NetworkPeer;
 
@@ -76,14 +71,24 @@ public class PoafsFileStream extends InputStream {
 	 */
 	private HashMap<Integer, FileBlock> fileContent = new HashMap<Integer, FileBlock>();
 	
+	/**
+	 * The decrypter to use to decrypt the file stream.
+	 */
+	private IDecrypter decrypter;
+	
+	private ITracker tracker;
+	
 	private boolean ready = false;
 	
-	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth) {
+	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker) {
 		try {
 			this.auth = auth;
 			info = auth.getInfoForFile(fileId);
 			this.fileId = fileId;
 			this.preloadDistance = Math.min(preloadDistance, info.getLength());
+			
+			decrypter = decrypter;
+			tracker = tracker;
 			
 			initialFetch();
 		} catch (ProtocolException e) {
@@ -129,7 +134,7 @@ public class PoafsFileStream extends InputStream {
 	 */
 	private void startFetcher() {
 		//start up a new block fetcher
-		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, auth, fileContent);
+		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, auth, fileContent, decrypter, tracker);
 		fetchers.put(nextFetchIndex, bf);
 		new Thread(bf).start();
 		nextFetchIndex++;
@@ -189,11 +194,17 @@ class  BlockFetcher implements Runnable {
 	
 	private HashMap<Integer, FileBlock> fileContent;
 	
-	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent) {
+	private IDecrypter d;
+	
+	private ITracker t;
+	
+	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker) {
 		this.auth = auth;
 		this.fileId = fileId;
 		this.index = index;
 		this.fileContent = fileContent;
+		this.d = d;
+		t = tracker;
 	}
 
 	@Override
@@ -234,11 +245,8 @@ class  BlockFetcher implements Runnable {
 		if (block instanceof EncryptedFileBlock) {
 			String peerId = block.getOriginPeerId();
 
-			IDecrypter d;
+
 			try {
-				d = auth.getKeyForPeer(peerId);
-			
-			
 				long time = System.currentTimeMillis() - startTime;
 				
 				FileBlock out = d.decrypt((EncryptedFileBlock)block);
@@ -247,7 +255,7 @@ class  BlockFetcher implements Runnable {
 						time + "ms " + ((double)time)/out.getContent().length + "B/ms");
 				
 				return out;
-			} catch (KeyException | ProtocolException e) {
+			} catch (KeyException e) {
 				System.out.println("Error decrypting " + fileId + ":" + index);
 				System.out.println(block.getContent().length);
 				e.printStackTrace();
@@ -270,7 +278,7 @@ class  BlockFetcher implements Runnable {
 		long startTime = System.currentTimeMillis();
 		
 		Random r = new Random();
-		List<String> peerIds = auth.findBlock(fileId, block);
+		List<String> peerIds = t.findBlock(fileId, block);
 		String peerId = null;
 		
 		//loop until we get the block or run out of peers
@@ -279,7 +287,7 @@ class  BlockFetcher implements Runnable {
 				//choose a random peer
 				peerId = peerIds.get(r.nextInt(peerIds.size()));
 				
-				InetSocketAddress addr = auth.getHostForPeer(peerId);
+				InetSocketAddress addr = t.getHostForPeer(peerId);
 				
 				//get the block off of the peer
 				IPeer peer = new NetworkPeer(peerId, addr);
