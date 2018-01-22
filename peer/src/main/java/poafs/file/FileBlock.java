@@ -16,7 +16,6 @@ import javax.crypto.SecretKey;
 public class FileBlock {
 
 	public FileBlock(String originPeerId, byte[] content, int index) {
-		super();
 		this.originPeerId = originPeerId;
 		this.content = content;
 		this.index = index;
@@ -48,6 +47,11 @@ public class FileBlock {
 	 */
 	public SecretKey getKey() {
 		return key;
+	}
+	
+	
+	public void setKey(SecretKey key) {
+		this.key = key;
 	}
 
 	public String getOriginPeerId() {

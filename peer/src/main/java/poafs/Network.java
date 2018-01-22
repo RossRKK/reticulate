@@ -17,7 +17,7 @@ import org.web3j.crypto.CipherException;
 
 import poafs.auth.EthAuth;
 import poafs.auth.IAuthenticator;
-import poafs.cryto.EthereumWallet;
+import poafs.cryto.KeyStore;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
@@ -50,7 +50,7 @@ public class Network {
 	/**
 	 * The encrypter to be used for all local files.
 	 */
-	private EthereumWallet wallet;
+	private KeyStore keyStore;
 	
 	private ITracker tracker;
 	
@@ -62,7 +62,7 @@ public class Network {
 	public Network(String path, String pass) throws ProtocolException, IOException, CipherException {
 		//this.auth = new NetAuthenticator(hostname, port, ssl);
 		this.auth = new EthAuth();
-		wallet = new EthereumWallet(path, pass);
+		keyStore = new KeyStore();
 		tracker = new DummyTracker();
 		
 		//start the local server
@@ -102,7 +102,7 @@ public class Network {
 			byte[] contents = Arrays.copyOfRange(bytes, i * blockLength, i * blockLength + thisBlockLength);
 			
 			FileBlock block = new FileBlock(id, contents, i);
-			EncryptedFileBlock encrypted = wallet.encrypt(block);
+			EncryptedFileBlock encrypted = keyStore.encrypt(block);
 			
 			file.addBlock(encrypted);
 		}
@@ -120,6 +120,6 @@ public class Network {
 	}
 	
 	public PoafsFileStream fetchFile(String fileId) {
-		return new PoafsFileStream(fileId, 5, auth, wallet, tracker);
+		return new PoafsFileStream(fileId, 5, auth, keyStore, tracker);
 	}
 }
