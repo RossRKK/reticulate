@@ -18,29 +18,14 @@ import poafs.file.PoafsFile;
  */
 public interface IAuthenticator {
 	/**
-	 * Get the decrypter for a given peer.
-	 * @param peerId The id of the peer who provided the block we want to decrypt.
-	 * @return The decrypter that can decrypt files from the given peer.
+	 * Get the decrypter for a given file.
+	 * @param peerId The id of the file that we want to decrypt.
+	 * @return The decrypter that can decrypt that file.
 	 * @throws IOException 
 	 * @throws KeyException 
 	 */
-	public IDecrypter getKeyForPeer(String peerId) throws ProtocolException, KeyException;
+	public IDecrypter getKeyForFile(String fileId) throws ProtocolException, KeyException;
 	
-	/**
-	 * Get the hostname this peer can be accessed on.
-	 * @param peerId The id of the peer.
-	 * @return The hostname of the peer.
-	 * @throws IOException 
-	 */
-	public InetSocketAddress getHostForPeer(String peerId) throws ProtocolException;
-	
-	
-	/**
-	 * Authorise the user TODO
-	 * @return Whether the user is authorised.
-	 * @throws IOException 
-	 */
-	public boolean authoriseUser(String userName, String password) throws ProtocolException;
 	
 	/**
 	 * List all available files on this auth server.
@@ -50,17 +35,6 @@ public interface IAuthenticator {
 	public List<FileMeta> listFiles() throws ProtocolException;
 	
 	public FileMeta getInfoForFile(String fileId) throws ProtocolException;
-	
-	public List<String> findBlock(String fileId, int blockIndex) throws ProtocolException;
 
 	public boolean registerFile(PoafsFile file, String fileName) throws ProtocolException;
-
-	public IEncrypter registerPeer() throws ProtocolException, KeyException;
-	
-	/**
-	 * Register that this peer has received a file block.
-	 * @param fileId The id of the file.
-	 * @param index The index of the block.
-	 */
-	public void registerTransfer(String fileId, int index) throws ProtocolException;
 }

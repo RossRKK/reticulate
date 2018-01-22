@@ -8,7 +8,8 @@ public class EncryptedFileBlock extends FileBlock {
 		super(originPeerId, content, index);
 		this.wrappedKey = wrappedKey;
 	}
-
+	
+	
 	/**
 	 * The wrapped AES key that was used to encrypt this block.
 	 */

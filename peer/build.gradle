@@ -30,5 +30,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     
     compile 'uk.co.caprica:vlcj:3.10.1'
+    
+    compile ('org.web3j:core:3.2.0')
 }
 
