@@ -67,7 +67,7 @@ public class FileBlock {
 	}
 	
 	protected String getHeaders() {
-		return originPeerId + "\nblock";
+		return originPeerId;
 	}
 
 	public void save(String path) throws IOException {

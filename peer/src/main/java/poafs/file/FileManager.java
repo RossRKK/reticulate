@@ -75,30 +75,13 @@ public class FileManager {
 				
 				String originId = sc.nextLine();
 				
-				String keyOrBlock = sc.nextLine();
+				//this is an plain block
+				String content64 = sc.nextLine();
 				
-				FileBlock block;
-				if (keyOrBlock.contains("key")) {
-					//this is an encrypted block
-					String wrappedKey64 = sc.nextLine();
-					
-					byte[] wrappedKey = Base64.getDecoder().decode(wrappedKey64);
-
-					keyOrBlock = sc.nextLine();
-					
-					String content64 = sc.nextLine();
-					
-					byte[] content = Base64.getDecoder().decode(content64);
-					
-					block = new EncryptedFileBlock(originId, content, Integer.parseInt(blockFilePath), wrappedKey);
-				} else {
-					//this is an plain block
-					String content64 = sc.nextLine();
-					
-					byte[] content = Base64.getDecoder().decode(content64);
-					
-					block = new FileBlock(originId, content, Integer.parseInt(blockFilePath));
-				}
+				byte[] content = Base64.getDecoder().decode(content64);
+				
+				//TODO fetch the wrapped key from the ethereum network
+				EncryptedFileBlock block = new EncryptedFileBlock(originId, content, Integer.parseInt(blockFilePath), null);
 				
 				sc.close();
 				file.addBlock(block);

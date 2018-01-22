@@ -2,6 +2,8 @@ package poafs.auth;
 
 import java.util.List;
 
+import javax.crypto.SecretKey;
+
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
 
@@ -43,7 +45,7 @@ public class EthAuth implements IAuthenticator {
 	}
 
 	@Override
-	public boolean registerFile(PoafsFile file, String fileName) throws ProtocolException {
+	public boolean registerFile(PoafsFile file, String fileName, SecretKey key) throws ProtocolException {
 		// TODO Auto-generated method stub
 		return false;
 	}

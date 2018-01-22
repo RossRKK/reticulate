@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
+import javax.crypto.SecretKey;
+
 import poafs.cryto.IDecrypter;
 import poafs.cryto.IEncrypter;
 import poafs.exception.KeyException;
@@ -36,5 +38,5 @@ public interface IAuthenticator {
 	
 	public FileMeta getInfoForFile(String fileId) throws ProtocolException;
 
-	public boolean registerFile(PoafsFile file, String fileName) throws ProtocolException;
+	public boolean registerFile(PoafsFile file, String fileName, SecretKey key) throws ProtocolException;
 }

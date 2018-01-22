@@ -64,13 +64,6 @@ public class RequestHandler implements Runnable {
 				
 				EncryptedFileBlock block = (EncryptedFileBlock) fm.getFileBlock(fileId, blockIndex);
 				
-				println("key length:" + block.getWrappedKey().length);
-				
-				//out.write(block.getWrappedKey());
-				out.println(Base64.getEncoder().encodeToString(block.getWrappedKey()));
-				
-				println("block length:" + block.getContent().length);
-				
 				//out.write(block.getContent());
 				out.println(Base64.getEncoder().encodeToString(block.getContent()));
 				
@@ -78,9 +71,6 @@ public class RequestHandler implements Runnable {
 			}
 			
 			in.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
 		} finally {
 			try {
 				sock.close();

@@ -11,7 +11,9 @@ import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 import org.web3j.crypto.CipherException;
 
@@ -69,6 +71,12 @@ public class Network {
 		new Thread(new Server(Reference.DEFAULT_PORT, fileManager)).start();
 	}
 	
+	public static SecretKey buildAESKey() throws NoSuchAlgorithmException {
+		KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+		keyGen.init(256); // for example
+		return keyGen.generateKey();
+    }
+	
 	/**
 	 * Register a local file with the network.
 	 * @throws IOException 
@@ -78,9 +86,11 @@ public class Network {
 	 * @throws NoSuchAlgorithmException 
 	 * @throws InvalidKeyException 
 	 */
-	public void registerFile(String path, String fileName) throws IOException, ProtocolException, KeyException {
+	public void registerFile(String path, String fileName) throws IOException, ProtocolException, KeyException, NoSuchAlgorithmException {
 		String id = UUID.randomUUID().toString();
 		System.out.println(id);
+
+		SecretKey key = buildAESKey();
 		
 		//read in the file
 		File orig = new File(path);
@@ -102,16 +112,19 @@ public class Network {
 			byte[] contents = Arrays.copyOfRange(bytes, i * blockLength, i * blockLength + thisBlockLength);
 			
 			FileBlock block = new FileBlock(id, contents, i);
+			block.setKey(key);
+			
 			EncryptedFileBlock encrypted = keyStore.encrypt(block);
 			
 			file.addBlock(encrypted);
 		}
+		
 		System.out.println("Encrypted");
 		
 		fileManager.registerFile(file);
 		file.saveFile();
 		
-		auth.registerFile(file, fileName);
+		auth.registerFile(file, fileName, key);
 		System.out.println("Registered");
 	}
 

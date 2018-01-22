@@ -18,10 +18,4 @@ public class EncryptedFileBlock extends FileBlock {
 	public byte[] getWrappedKey() {
 		return wrappedKey;
 	}
-	
-	@Override
-	protected String getHeaders() {
-		String base64Encoded = Base64.getEncoder().encodeToString(wrappedKey);
-		return originPeerId + "\nkey\n"+ base64Encoded + "\nblock";
-	}
 }

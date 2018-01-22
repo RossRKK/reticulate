@@ -1,11 +1,5 @@
-Create local drive interface which can:
--save and load the config
-	-local peer id
--save and load encrypted local files
-
-Create a network adapter for peers:
--connect to a non firewalled peer
--connect using a hole punch
-
-Auth server connection:
--get addresses of other peers
+TODO:
+-Implement the tracker
+-Store the keys (config file?)
+-Interface with the smart contract
+-Add hashes for files

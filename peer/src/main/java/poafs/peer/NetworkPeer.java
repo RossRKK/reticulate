@@ -80,8 +80,6 @@ public class NetworkPeer implements IPeer {
 		try {
 			String request = fileId + ":" + index;
 			
-			FileBlock block = null;
-			
 			out.println(request);
 			
 			out.flush();
@@ -99,43 +97,13 @@ public class NetworkPeer implements IPeer {
 	 */
 	private synchronized FileBlock readResponse(int index) throws ProtocolException {
 		try {
-			String response = sc.nextLine();
+			//read in the content of the block
+			String content64 = sc.nextLine();
+			byte[] content = Base64.getDecoder().decode(content64);
 			
-			//figure out if this response contains a key we need to parse
-			boolean isKey = response.contains("key");
-			
-			//determine the length of the recieved content (key or block)
-			int length = Integer.parseInt(response.split(":")[1]);
-			
-			if (isKey) {
-				//read in the wrapped key
-				
-				String wrappedKey64 = sc.nextLine();
-				byte[] wrappedKey = Base64.getDecoder().decode(wrappedKey64);
-				
-				//read the info about the actual content
-				response = sc.nextLine();
-				
-				
-				//figure out the length of the content
-				length = Integer.parseInt(response.split(":")[1]);
-				
-				//read in the conent
-				
-				String content64 = sc.nextLine();
-				byte[] content = Base64.getDecoder().decode(content64);
-				
-				//return the encrypted block
-				return new EncryptedFileBlock(id, content, index, wrappedKey);
-			} else {
-				//read in the content of the block
-				
-				String content64 = sc.nextLine();
-				byte[] content = Base64.getDecoder().decode(content64);
-				
-				//return the relevant block
-				return new FileBlock(id, content, index);
-			}
+			//return the relevant block
+			//TODO get the wrapped key from the ethereum network
+			return new EncryptedFileBlock(id, content, index, null);
 		} catch (IndexOutOfBoundsException | NumberFormatException e) {
 			throw new ProtocolException("Error retrieving block from peer " + id);
 		}
