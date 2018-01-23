@@ -18,4 +18,8 @@ public class EncryptedFileBlock extends FileBlock {
 	public byte[] getWrappedKey() {
 		return wrappedKey;
 	}
+
+	public void setWrappedKey(byte[] wrappedKey) {
+		this.wrappedKey = wrappedKey;
+	}
 }

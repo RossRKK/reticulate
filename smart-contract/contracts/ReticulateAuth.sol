@@ -50,6 +50,8 @@ contract ReticulateAuth {
         return files[fileId].permissions[user].level;
     }
 
+
+    //TODO add file length 
     ///add a file to the contracts register
     function addFile(string fileId, string name, bytes key) public {
         files[fileId] = File({
@@ -85,6 +87,7 @@ contract ReticulateAuth {
     }
 
     ///modify the access level of a user
+    //FIXME there's a type on this funciton name
     function modifyAccesLevel(string fileId, address user, uint level) public {
         File storage file = files[fileId];
         if (file.permissions[msg.sender].level >= ADMIN

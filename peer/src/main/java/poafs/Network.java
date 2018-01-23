@@ -68,7 +68,7 @@ public class Network {
 		Credentials creds = WalletUtils.loadCredentials(pass, path);
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
-		this.auth = new EthAuth(creds, keyStore);
+		this.auth = new EthAuth(creds);
 		tracker = new DummyTracker();
 		
 		//start the local server

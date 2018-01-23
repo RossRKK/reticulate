@@ -239,7 +239,8 @@ class  BlockFetcher implements Runnable {
 		if (block instanceof EncryptedFileBlock) {
 			String peerId = block.getOriginPeerId();
 
-
+			((EncryptedFileBlock)block).setWrappedKey(auth.getKeyForFile(fileId));
+			
 			try {
 				long time = System.currentTimeMillis() - startTime;
 				
