@@ -81,21 +81,15 @@ public class PoafsFileStream extends InputStream {
 	private boolean ready = false;
 	
 	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker) {
-		try {
-			this.auth = auth;
-			info = auth.getInfoForFile(fileId);
-			this.fileId = fileId;
-			this.preloadDistance = Math.min(preloadDistance, info.getLength());
-			
-			decrypter = decrypter;
-			tracker = tracker;
-			
-			initialFetch();
-		} catch (ProtocolException e) {
-			System.err.println(e.getMessage());
-			
-			e.printStackTrace();
-		}
+		this.auth = auth;
+		info = auth.getInfoForFile(fileId);
+		this.fileId = fileId;
+		this.preloadDistance = Math.min(preloadDistance, info.getLength());
+		
+		this.decrypter = decrypter;
+		this.tracker = tracker;
+		
+		initialFetch();
 	}
 
 	/**

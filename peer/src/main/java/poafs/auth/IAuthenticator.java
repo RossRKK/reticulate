@@ -20,23 +20,15 @@ import poafs.file.PoafsFile;
  */
 public interface IAuthenticator {
 	/**
-	 * Get the decrypter for a given file.
+	 * Get the wrapped key for a given file.
 	 * @param peerId The id of the file that we want to decrypt.
-	 * @return The decrypter that can decrypt that file.
+	 * @return The wrapped key for that file.
 	 * @throws IOException 
 	 * @throws KeyException 
 	 */
-	public IDecrypter getKeyForFile(String fileId) throws ProtocolException, KeyException;
+	public byte[] getKeyForFile(String fileId);
 	
+	public FileMeta getInfoForFile(String fileId);
 	
-	/**
-	 * List all available files on this auth server.
-	 * @return A list of files.
-	 * @throws IOException 
-	 */
-	public List<FileMeta> listFiles() throws ProtocolException;
-	
-	public FileMeta getInfoForFile(String fileId) throws ProtocolException;
-
-	public boolean registerFile(PoafsFile file, String fileName, SecretKey key) throws ProtocolException;
+	public boolean registerFile(PoafsFile file, String fileName, byte[] wrappedKey);
 }

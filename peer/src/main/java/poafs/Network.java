@@ -16,6 +16,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
 import org.web3j.crypto.CipherException;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
 
 import poafs.auth.EthAuth;
 import poafs.auth.IAuthenticator;
@@ -63,8 +65,10 @@ public class Network {
 	
 	public Network(String path, String pass) throws ProtocolException, IOException, CipherException {
 		//this.auth = new NetAuthenticator(hostname, port, ssl);
-		this.auth = new EthAuth();
-		keyStore = new KeyStore();
+		Credentials creds = WalletUtils.loadCredentials(pass, path);
+		System.out.println(creds.getAddress());
+		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
+		this.auth = new EthAuth(creds, keyStore);
 		tracker = new DummyTracker();
 		
 		//start the local server
@@ -124,12 +128,12 @@ public class Network {
 		fileManager.registerFile(file);
 		file.saveFile();
 		
-		auth.registerFile(file, fileName, key);
+		auth.registerFile(file, fileName, ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
 		System.out.println("Registered");
 	}
 
 	public List<FileMeta> listFiles() throws ProtocolException {
-		return auth.listFiles();
+		return tracker.listFiles();
 	}
 	
 	public PoafsFileStream fetchFile(String fileId) {

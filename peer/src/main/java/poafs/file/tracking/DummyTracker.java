@@ -6,6 +6,7 @@ import java.util.List;
 
 import poafs.Application;
 import poafs.exception.ProtocolException;
+import poafs.file.FileMeta;
 import poafs.lib.Reference;
 
 public class DummyTracker implements ITracker {
@@ -26,6 +27,12 @@ public class DummyTracker implements ITracker {
 	public void registerTransfer(String fileId, int index) throws ProtocolException {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public List<FileMeta> listFiles() throws ProtocolException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -4,12 +4,18 @@ import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+
+import org.bouncycastle.util.Arrays;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.ECKeyPair;
 
 import poafs.Application;
 import poafs.exception.KeyException;
@@ -19,14 +25,63 @@ import poafs.lib.Reference;
 
 public class KeyStore implements IEncrypter, IDecrypter {
 	
+	/**
+	 * The RSA key sized used by this class.
+	 */
+    public final static int keySize = 2048;
+	
 	private PrivateKey privateKey;
 	private PublicKey publicKey;
 	
 	private Cipher rsa;
 	private Cipher aes;
 	
-	public KeyStore() {
-		KeyPair pair = buildRSAKeyPair();
+	/**
+	 * Generate an RSA key pair.
+	 * @return A key pair.
+	 * @throws NoSuchAlgorithmException
+	 */
+	public static KeyPair buildRSAKeyPair() {
+		try {
+	        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+	        keyPairGenerator.initialize(keySize);
+	        return keyPairGenerator.genKeyPair();
+		} catch (NoSuchAlgorithmException e) {
+			return null;
+		}
+    }
+	
+	/**
+	 * Construct an RSA key pair using an ethereum wallet as the seed.
+	 * @return An RSA key pair.
+	 */
+	public static KeyPair buildRSAKeyPairFromWallet(Credentials credentials) {
+		ECKeyPair ecKeys = credentials.getEcKeyPair();
+		
+		try {
+			SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+			
+			random.setSeed(Arrays.concatenate(ecKeys.getPublicKey().toByteArray(), ecKeys.getPrivateKey().toByteArray()));
+			
+			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+	        keyPairGenerator.initialize(keySize, random);
+	        
+	        return keyPairGenerator.genKeyPair();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchProviderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	/**
+	 * Construct a key store from a pre-defined key pair.
+	 * @param pair A pair of RSA keys.
+	 */
+	public KeyStore(KeyPair pair) {
 		
 		privateKey = pair.getPrivate();
 		publicKey = pair.getPublic();
@@ -43,21 +98,7 @@ public class KeyStore implements IEncrypter, IDecrypter {
 		}
 	}
 	
-	/**
-	 * Generate a key pair.
-	 * @return A key pair.
-	 * @throws NoSuchAlgorithmException
-	 */
-	public static KeyPair buildRSAKeyPair() {
-		try {
-	        final int keySize = 2048;
-	        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-	        keyPairGenerator.initialize(keySize);
-	        return keyPairGenerator.genKeyPair();
-		} catch (NoSuchAlgorithmException e) {
-			return null;
-		}
-    }
+	
 	
 	/**
 	 * Unwrap the aes key.

@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 import poafs.exception.ProtocolException;
+import poafs.file.FileMeta;
 
 /**
  * Interface for something that tracks the lcoations of files.
@@ -29,4 +30,11 @@ public interface ITracker {
 	 * @param index The index of the block.
 	 */
 	public void registerTransfer(String fileId, int index) throws ProtocolException;
+	
+	/**
+	 * List all available files on this auth server.
+	 * @return A list of files.
+	 * @throws IOException 
+	 */
+	public List<FileMeta> listFiles() throws ProtocolException;
 }
