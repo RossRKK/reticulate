@@ -2,14 +2,13 @@ package poafs.auth;
 
 import java.math.BigInteger;
 
-import org.web3j.abi.datatypes.Address;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tx.Contract;
 import org.web3j.tx.ManagedTransaction;
 
-import poafs.cryto.KeyStore;
 import poafs.file.FileMeta;
 import poafs.file.PoafsFile;
 
@@ -27,7 +26,7 @@ public class EthAuth implements IAuthenticator {
 	public EthAuth(Credentials credentials) {
 		web3j = Web3j.build(new HttpService("https://rinkeby.infura.io/kMVN82WbWTrThVdoRsKH"));
 		
-		contract = new ReticulateAuth("0x5e548A5437e53ceB0a8CE67b747C47A7F0A08315", web3j, 
+		contract = new ReticulateAuth("0xaC2D7F31249d35442c8e317c156102a37f422BEA", web3j, 
 				credentials, ManagedTransaction.GAS_PRICE, Contract.GAS_LIMIT);
 	}
 
@@ -55,10 +54,9 @@ public class EthAuth implements IAuthenticator {
 	@Override
 	public FileMeta getInfoForFile(String fileId) {
 		try {
-			String fileName = contract.getFileName(fileId).send();
-			int length = 1; //TODO not implemented in smart contract
+			Tuple2<String, BigInteger> meta = contract.getFileMeta(fileId).send();
 			
-			return new FileMeta(fileId, fileName, length);
+			return new FileMeta(fileId, meta.getValue1(), meta.getValue2().intValueExact());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -73,9 +71,9 @@ public class EthAuth implements IAuthenticator {
 	 * @return Whether the action was successful.
 	 */
 	@Override
-	public boolean registerFile(PoafsFile file, String fileName, byte[] wrappedKey) {
+	public boolean registerFile(PoafsFile file, String fileName, int length, byte[] wrappedKey) {
 		try {
-			contract.addFile(file.getId(), fileName, wrappedKey).send();
+			contract.addFile(file.getId(), fileName, wrappedKey, BigInteger.valueOf(length)).send();
 			
 			return true;
 		} catch (Exception e) {
@@ -139,7 +137,7 @@ public class EthAuth implements IAuthenticator {
 	 * Revoke a user's permission to use a file.
 	 * @param fileId The id of the file.
 	 * @param user The user's address.
-	 * @return Whether the aciton succeeded.
+	 * @return Whether the action succeeded.
 	 */
 	@Override
 	public boolean revokeShare(String fileId, String user) {
@@ -162,8 +160,7 @@ public class EthAuth implements IAuthenticator {
 	@Override
 	public boolean modifyAccessLevel(String fileId, String user, int accessLevel) {
 		try {
-			//FIXME there's a typo in the contract
-			contract.modifyAccesLevel(fileId, user, BigInteger.valueOf(accessLevel)).send();
+			contract.modifyAccessLevel(fileId, user, BigInteger.valueOf(accessLevel)).send();
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

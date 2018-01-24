@@ -14,6 +14,8 @@ contract ReticulateAuth {
     struct File {
         //the firendly name of the file
         string name;
+        //the number of blocks in this file
+        uint length;
         //the encrypted keys for each user with access
         mapping(address => Permission) permissions;
     }
@@ -41,8 +43,8 @@ contract ReticulateAuth {
     }
 
     //get the name of the file
-    function getFileName(string fileId) public view returns(string) {
-        return files[fileId].name;
+    function getFileMeta(string fileId) public view returns(string, uint) {
+        return (files[fileId].name, files[fileId].length);
     }
 
     //get a users access level for a file
@@ -50,12 +52,11 @@ contract ReticulateAuth {
         return files[fileId].permissions[user].level;
     }
 
-
-    //TODO add file length 
     ///add a file to the contracts register
-    function addFile(string fileId, string name, bytes key) public {
+    function addFile(string fileId, string name, bytes key, uint length) public {
         files[fileId] = File({
-            name: name
+            name: name,
+            length: length
         });
 
         files[fileId].permissions[msg.sender] = Permission(key, ADMIN);
@@ -87,8 +88,7 @@ contract ReticulateAuth {
     }
 
     ///modify the access level of a user
-    //FIXME there's a type on this funciton name
-    function modifyAccesLevel(string fileId, address user, uint level) public {
+    function modifyAccessLevel(string fileId, address user, uint level) public {
         File storage file = files[fileId];
         if (file.permissions[msg.sender].level >= ADMIN
             && file.permissions[msg.sender].level >= level) {

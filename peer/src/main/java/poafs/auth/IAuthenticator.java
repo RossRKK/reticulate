@@ -17,8 +17,6 @@ public interface IAuthenticator {
 	public byte[] getKeyForFile(String fileId);
 	
 	public FileMeta getInfoForFile(String fileId);
-	
-	public boolean registerFile(PoafsFile file, String fileName, byte[] wrappedKey);
 
 	public int getAccessLevel(String fileId, String user);
 
@@ -29,4 +27,6 @@ public interface IAuthenticator {
 	public boolean revokeShare(String fileId, String user);
 
 	public boolean modifyAccessLevel(String fileId, String user, int accessLevel);
+
+	public boolean registerFile(PoafsFile file, String fileName, int length, byte[] wrappedKey);
 }

@@ -128,7 +128,7 @@ public class Network {
 		fileManager.registerFile(file);
 		file.saveFile();
 		
-		auth.registerFile(file, fileName, ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
+		auth.registerFile(file, fileName, noBlocks, ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
 		System.out.println("Registered");
 	}
 
