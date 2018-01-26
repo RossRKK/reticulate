@@ -1,21 +1,12 @@
 package poafs.peer;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.List;
 
 import poafs.exception.ProtocolException;
 import poafs.file.FileBlock;
 import poafs.file.tracking.PeerInfo;
 
-public interface IPeer {
-	/**
-	 * Handshake with another peer.
-	 * @throws IOException 
-	 * @throws UnknownHostException 
-	 * @throws ProtocolException 
-	 */
-	public void openConnection() throws UnknownHostException, ProtocolException;
+public interface IPeer extends Runnable {
 	
 	/**
 	 * Request a block from a file, the resulting block should be automatically decrypted.
@@ -30,7 +21,7 @@ public interface IPeer {
 	 * @param fileId
 	 * @param block
 	 */
-	void sendBlock(String fileId, FileBlock block);
+	void sendBlock(String fileId, FileBlock block) throws ProtocolException;
 	
 	/**
 	 * Get this peers Id.
@@ -42,5 +33,5 @@ public interface IPeer {
 	 * Get a list of all the peers this peer knows about.
 	 * @return A list of peer info objects.
 	 */
-	public List<PeerInfo> getKnownPeers();
+	public List<PeerInfo> getKnownPeers() throws ProtocolException;
 }

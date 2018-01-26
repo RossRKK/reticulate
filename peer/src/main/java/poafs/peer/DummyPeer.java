@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.crypto.NoSuchPaddingException;
 
@@ -13,8 +14,10 @@ import poafs.cryto.HybridEncrypter;
 import poafs.cryto.IDecrypter;
 import poafs.cryto.IEncrypter;
 import poafs.exception.KeyException;
+import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.PoafsFile;
+import poafs.file.tracking.PeerInfo;
 import poafs.file.FileBlock;
 
 public class DummyPeer implements IPeer {
@@ -40,11 +43,6 @@ public class DummyPeer implements IPeer {
 		this.id = id;
 		d = new HybridDecrypter(privateKey);
 		e = new HybridEncrypter(publicKey);
-	}
-	
-	@Override
-	public void openConnection() {
-		/*There isn't a connection*/
 	}
 
 	@Override
@@ -83,5 +81,17 @@ public class DummyPeer implements IPeer {
 	@Override
 	public String getId() {
 		return id;
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<PeerInfo> getKnownPeers() throws ProtocolException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

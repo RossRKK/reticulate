@@ -27,10 +27,10 @@ import poafs.file.FileBlock;
 import poafs.file.FileManager;
 import poafs.file.PoafsFile;
 import poafs.lib.Reference;
-import poafs.net.Server;
 import poafs.peer.DummyPeer;
 import poafs.peer.IPeer;
 import poafs.peer.NetworkPeer;
+import poafs.peer.Server;
 
 public class Tests {
 	/**

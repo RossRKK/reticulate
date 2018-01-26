@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.List;
 import java.util.Scanner;
 
 import poafs.Application;
@@ -18,6 +19,8 @@ import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
+import poafs.file.FileManager;
+import poafs.file.tracking.PeerInfo;
 
 /**
  * A peer that is somewhere else on the network.
@@ -26,44 +29,94 @@ import poafs.file.FileBlock;
  */
 public class NetworkPeer implements IPeer {
 
-	private String host;
-	
-	private int port;
-	
+	/**
+	 * The socket that this peer speaks over.
+	 */
 	private Socket s;
 	
+	/**
+	 * The output stream to the peer.
+	 */
 	private PrintWriter out;
 	
+	/**
+	 * The scanner that reads input from the other peer.
+	 */
 	private Scanner sc;
 	
+	/**
+	 * The id of the peer.
+	 */
 	private String id;
-
-	public NetworkPeer(String id, InetSocketAddress addr) {
-		this.host = addr.getHostName();
-		this.port = addr.getPort();
-		this.id = id;
-	}
 	
-
-	@Override
-	public synchronized void openConnection() throws UnknownHostException, ProtocolException {
+	/**
+	 * The local peer's file manager.
+	 */
+	private FileManager fm;
+	
+	/**
+	 * Open a connection to a new peer.
+	 * @param s The socket to connect through.
+	 * @throws IOException
+	 */
+	public NetworkPeer(Socket s, FileManager fm) throws ProtocolException {
 		try {
-			s = new Socket(host, port);
+			this.s = s;
+			this.fm = fm;
 			
-			out = new PrintWriter(s.getOutputStream());		
+			//TODO register the connected peer with the tracker
 			
-			//in = new BufferedInputStream(s.getInputStream());
+			out = new PrintWriter(s.getOutputStream());
 			sc = new Scanner(s.getInputStream());
 			
-			//print some headers
-			out.println("POAFS Version 0.1");
+			out.println("Reticulate 0.1");
 			out.println(Application.getPropertiesManager().getPeerId());
 			
+			out.flush();
+			
+			//TODO check that protocol versions are compatible
 			String versionDec = sc.nextLine();
-
-			String peerId = sc.nextLine();
+	
+			this.id = sc.nextLine();
+			
+			//start the peer listening in a new thread
+			new Thread(this).start();
 		} catch (IOException | IndexOutOfBoundsException | NumberFormatException e) {
 			throw new ProtocolException("Error opening connection to peer " + id);
+		}
+	}
+	
+	/**
+	 * Handle incoming requests.
+	 */
+	@Override
+	public void run() {
+		try {
+			
+			//read all requests for file segments
+			while (!s.isClosed()) {
+				String request = sc.nextLine();
+				
+				//requests should take the form <file id>:<block index>
+				String[] info = request.split(":");
+				String fileId = info[0];
+				int blockIndex = Integer.parseInt(info[1]);
+				
+				EncryptedFileBlock block = (EncryptedFileBlock) fm.getFileBlock(fileId, blockIndex);
+				
+				//out.write(block.getContent());
+				out.println(Base64.getEncoder().encodeToString(block.getContent()));
+				
+				out.flush();
+			}
+			
+			sc.close();
+		} finally {
+			try {
+				s.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -102,7 +155,6 @@ public class NetworkPeer implements IPeer {
 			byte[] content = Base64.getDecoder().decode(content64);
 			
 			//return the relevant block
-			//TODO get the wrapped key from the ethereum network
 			return new EncryptedFileBlock(id, content, index, null);
 		} catch (IndexOutOfBoundsException | NumberFormatException e) {
 			throw new ProtocolException("Error retrieving block from peer " + id);
@@ -119,5 +171,11 @@ public class NetworkPeer implements IPeer {
 	@Override
 	public synchronized String getId() {
 		return id;
+	}
+
+	@Override
+	public List<PeerInfo> getKnownPeers() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

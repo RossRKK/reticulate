@@ -11,12 +11,10 @@ import javax.swing.SwingUtilities;
 
 import org.web3j.crypto.CipherException;
 
-import com.sun.jna.NativeLibrary;
-
 import poafs.adapter.WebServer;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
-import poafs.file.FileMeta;
+import poafs.file.tracking.FileInfo;
 import poafs.gui.VideoPlayer;
 import poafs.local.PropertiesManager;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
@@ -169,9 +167,9 @@ public class Application {
 	 * Print out the list of files.
 	 * @param files The files to be listed.
 	 */
-	private static void listFiles(List<FileMeta> files) {		
-		for (FileMeta f:files) {
-			System.out.println(f.getFileName() + " " + f.getId());
+	private static void listFiles(FileInfo[] files) {		
+		for (FileInfo f:files) {
+			System.out.println(f.getFileId());
 		}
 	}
 	

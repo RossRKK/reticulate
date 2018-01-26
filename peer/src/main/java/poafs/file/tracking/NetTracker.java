@@ -1,12 +1,13 @@
 package poafs.file.tracking;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
+import poafs.Application;
 import poafs.exception.ProtocolException;
-import poafs.file.FileMeta;
+import poafs.file.FileManager;
 
 public class NetTracker implements ITracker {
 	
@@ -16,48 +17,53 @@ public class NetTracker implements ITracker {
 	private HashMap<String, PeerInfo> peers = new HashMap<String, PeerInfo>();
 	
 	private HashMap<String, FileInfo> files = new HashMap<String, FileInfo>();
+	
+	private FileManager fm;
+	
+	public NetTracker(FileManager fm) {
+		this.fm = fm;
+	}
 
 	@Override
-	public InetAddress getHostForPeer(String peerId) throws ProtocolException {
+	public InetSocketAddress getHostForPeer(String peerId) throws ProtocolException {
 		return peers.get(peerId).getAddr();
-	}
-	
-	/**
-	 * Find a peer by querying the network.
-	 * @param peerId The id of the peer.
-	 * @return The peer's info.
-	 */
-	private PeerInfo findPeer(String peerId) {
-		return null;
 	}
 
 	@Override
 	public Set<String> findBlock(String fileId, int blockIndex) throws ProtocolException {
-		return files.get(fileId).getPeerIdsForBlock(blockIndex);
+		if (files.get(fileId) == null) {
+			Set<String> peers = new HashSet<String>();
+			if (fm.getFileBlock(fileId, blockIndex) != null) {
+				peers.add(Application.getPropertiesManager().getPeerId());
+			}
+			return peers;
+		} else {
+			return files.get(fileId).getPeerIdsForBlock(blockIndex);
+		}
 	}
 	
-	/**
-	 * Find the block by querying the network.
-	 * @param fileId The id of the file to find.
-	 * @param index The index of the block.
-	 * @return The id of a peer who has the file block.
-	 */
-	private String findBlockOnNetwork(String fileId, int index) {
-		return null;
-	}
 
 	@Override
 	public void registerTransfer(String peerId, String fileId, int index) throws ProtocolException {
-		if (!peers.containsKey(peerId)) {
-			peers.put(peerId, new PeerInfo(peerId, null));
+		if (peers.containsKey(peerId)) {
+			peers.get(peerId).addFileBlock(fileId, index);
 		}
-		peers.get(peerId).addFileBlock(fileId, index);
+		
+		//register it in the files map
+		if (!files.containsKey(fileId)) {
+			files.put(fileId, new FileInfo(fileId));
+		}
+		files.get(fileId).addPeerForBlock(index, peerId);
+	}
+	
+	@Override
+	public void registerPeer(String peerId, InetSocketAddress addr) {
+		peers.put(peerId, new PeerInfo(peerId, addr));
 	}
 
 	@Override
-	public List<FileMeta> listFiles() throws ProtocolException {
-		// TODO Auto-generated method stub
-		return null;
+	public FileInfo[] listFiles() throws ProtocolException {
+		return (FileInfo[])files.entrySet().parallelStream().map(e -> e.getValue()).toArray();
 	}
 
 }

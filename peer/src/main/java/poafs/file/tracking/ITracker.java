@@ -2,6 +2,7 @@ package poafs.file.tracking;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 
 import poafs.exception.ProtocolException;
@@ -20,7 +21,7 @@ public interface ITracker {
 	 * @return The hostname of the peer.
 	 * @throws IOException 
 	 */
-	public InetAddress getHostForPeer(String peerId) throws ProtocolException;
+	public InetSocketAddress getHostForPeer(String peerId) throws ProtocolException;
 	
 	public Collection<String> findBlock(String fileId, int blockIndex) throws ProtocolException;
 	
@@ -37,5 +38,12 @@ public interface ITracker {
 	 * @return A list of files.
 	 * @throws IOException 
 	 */
-	public Collection<FileMeta> listFiles() throws ProtocolException;
+	public FileInfo[] listFiles() throws ProtocolException;
+
+	/**
+	 * Register a peer with this tracker.
+	 * @param peerId The id of the peer.
+	 * @param addr The address of the peer.
+	 */
+	public void registerPeer(String peerId, InetSocketAddress addr);
 }

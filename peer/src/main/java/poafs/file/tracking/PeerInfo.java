@@ -1,6 +1,7 @@
 package poafs.file.tracking;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -19,7 +20,7 @@ public class PeerInfo {
 	 * @param peerId The peer's id.
 	 * @param addr The address of the peer.
 	 */
-	public PeerInfo(String peerId, InetAddress addr) {
+	public PeerInfo(String peerId, InetSocketAddress addr) {
 		this.peerId = peerId;
 		this.addr = addr;
 		
@@ -35,7 +36,7 @@ public class PeerInfo {
 	/**
 	 * Where the peer can be found.
 	 */
-	private InetAddress addr;
+	private InetSocketAddress addr;
 	
 	/**
 	 * The ids of the file blocks that this peer has.
@@ -50,11 +51,11 @@ public class PeerInfo {
 		this.peerId = peerId;
 	}
 
-	public InetAddress getAddr() {
+	public InetSocketAddress getAddr() {
 		return addr;
 	}
 
-	public void setAddr(InetAddress addr) {
+	public void setAddr(InetSocketAddress addr) {
 		this.addr = addr;
 	}
 

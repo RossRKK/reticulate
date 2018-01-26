@@ -3,10 +3,10 @@ package poafs;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
@@ -27,12 +27,12 @@ import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
 import poafs.file.FileManager;
-import poafs.file.FileMeta;
 import poafs.file.PoafsFile;
-import poafs.file.tracking.NetTracker;
+import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.ITracker;
+import poafs.file.tracking.NetTracker;
 import poafs.lib.Reference;
-import poafs.net.Server;
+import poafs.peer.Server;
 
 /**
  * This is a class that is designed to represent and entire POAFS network.
@@ -64,15 +64,18 @@ public class Network {
 	private FileManager fileManager = new FileManager();
 	
 	public Network(String path, String pass) throws ProtocolException, IOException, CipherException {
-		//this.auth = new NetAuthenticator(hostname, port, ssl);
 		Credentials creds = WalletUtils.loadCredentials(pass, path);
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
 		this.auth = new EthAuth(creds);
-		tracker = new NetTracker();
+		tracker = new NetTracker(fileManager);
+		
 		
 		//start the local server
 		new Thread(new Server(Reference.DEFAULT_PORT, fileManager)).start();
+		
+		//register the local peer with the tracker
+		tracker.registerPeer(Application.getPropertiesManager().getPeerId(), new InetSocketAddress("localhost", Reference.DEFAULT_PORT));
 	}
 	
 	public static SecretKey buildAESKey() throws NoSuchAlgorithmException {
@@ -121,6 +124,8 @@ public class Network {
 			EncryptedFileBlock encrypted = keyStore.encrypt(block);
 			
 			file.addBlock(encrypted);
+			
+			tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), id, i);
 		}
 		
 		System.out.println("Encrypted");
@@ -132,11 +137,11 @@ public class Network {
 		System.out.println("Registered");
 	}
 
-	public List<FileMeta> listFiles() throws ProtocolException {
+	public FileInfo[] listFiles() throws ProtocolException {
 		return tracker.listFiles();
 	}
 	
 	public PoafsFileStream fetchFile(String fileId) {
-		return new PoafsFileStream(fileId, 5, auth, keyStore, tracker);
+		return new PoafsFileStream(fileId, 5, auth, keyStore, tracker, fileManager);
 	}
 }

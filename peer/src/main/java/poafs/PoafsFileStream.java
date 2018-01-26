@@ -3,8 +3,9 @@ package poafs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 
 import poafs.auth.IAuthenticator;
@@ -14,6 +15,7 @@ import poafs.exception.NoValidPeersException;
 import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
+import poafs.file.FileManager;
 import poafs.file.FileMeta;
 import poafs.file.tracking.ITracker;
 import poafs.peer.IPeer;
@@ -78,9 +80,14 @@ public class PoafsFileStream extends InputStream {
 	
 	private ITracker tracker;
 	
+	/**
+	 * The local peers file manager.
+	 */
+	private FileManager fm;
+	
 	private boolean ready = false;
 	
-	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker) {
+	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker, FileManager fm) {
 		this.auth = auth;
 		info = auth.getInfoForFile(fileId);
 		this.fileId = fileId;
@@ -88,6 +95,7 @@ public class PoafsFileStream extends InputStream {
 		
 		this.decrypter = decrypter;
 		this.tracker = tracker;
+		this.fm = fm;
 		
 		initialFetch();
 	}
@@ -128,7 +136,7 @@ public class PoafsFileStream extends InputStream {
 	 */
 	private void startFetcher() {
 		//start up a new block fetcher
-		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, auth, fileContent, decrypter, tracker);
+		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, auth, fileContent, decrypter, tracker, fm);
 		fetchers.put(nextFetchIndex, bf);
 		new Thread(bf).start();
 		nextFetchIndex++;
@@ -192,12 +200,15 @@ class  BlockFetcher implements Runnable {
 	
 	private ITracker t;
 	
-	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker) {
+	private FileManager fm;
+	
+	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker, FileManager fm) {
 		this.auth = auth;
 		this.fileId = fileId;
 		this.index = index;
 		this.fileContent = fileContent;
 		this.d = d;
+		this.fm = fm;
 		t = tracker;
 	}
 
@@ -273,31 +284,35 @@ class  BlockFetcher implements Runnable {
 		long startTime = System.currentTimeMillis();
 		
 		Random r = new Random();
-		List<String> peerIds = t.findBlock(fileId, block);
+		Collection<String> peerIds = t.findBlock(fileId, block);
 		String peerId = null;
 		
 		//loop until we get the block or run out of peers
 		while (!peerIds.isEmpty()) {
 			try {
 				//choose a random peer
-				peerId = peerIds.get(r.nextInt(peerIds.size()));
+				peerId = peerIds.toArray(new String[peerIds.size()])[r.nextInt(peerIds.size())];
 				
 				InetSocketAddress addr = t.getHostForPeer(peerId);
 				
-				//get the block off of the peer
-				IPeer peer = new NetworkPeer(peerId, addr);
-			
-				peer.openConnection();
-				
-				
-				FileBlock out = peer.requestBlock(fileId, block);
-				
-				long time = System.currentTimeMillis() - startTime;
-				
-				System.out.println("Fetch for " + fileId + ":" + index + " took " + 
-						time + "ms " + ((double)time)/out.getContent().length + "B/ms");
-				
-				return out;
+				//only go to the network if there isn't a local copy
+				if (addr.getHostName() != "localhost") {
+					
+					//get the block off of the peer
+					IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), fm);
+					
+					FileBlock out = peer.requestBlock(fileId, block);
+					
+					long time = System.currentTimeMillis() - startTime;
+					
+					System.out.println("Fetch for " + fileId + ":" + index + " took " + 
+							time + "ms " + ((double)time)/out.getContent().length + "B/ms");
+					
+					
+					return out;
+				} else {
+					return fm.getFileBlock(fileId, block);
+				}
 			} catch (IOException e) {
 				System.err.println(peerId + " was unreachable");
 				peerIds.remove(peerId);

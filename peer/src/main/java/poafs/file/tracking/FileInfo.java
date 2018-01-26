@@ -11,13 +11,9 @@ public class FileInfo {
 	
 	private List<Set<String>> blocks;
 	
-	public FileInfo(String fileId, int length) {
+	public FileInfo(String fileId) {
 		this.fileId = fileId;
-		blocks = new ArrayList<Set<String>>(length);
-		
-		for (int i = 0; i < length; i++) {
-			blocks.add(new HashSet<String>());
-		}
+		blocks = new ArrayList<Set<String>>();
 	}
 
 	public String getFileId() {
@@ -29,6 +25,9 @@ public class FileInfo {
 	}
 
 	public void addPeerForBlock(int index, String peerId) {
+		if (blocks.size() <= index || blocks.get(index) == null) {
+			blocks.add(index, new HashSet<String>());
+		}
 		blocks.get(index).add(peerId);
 	}
 	

@@ -1,4 +1,4 @@
-package poafs.net;
+package poafs.peer;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import poafs.exception.ProtocolException;
 import poafs.file.FileManager;
 
 /**
@@ -23,7 +24,7 @@ public class Server implements Runnable {
 	/**
 	 * All of the open requests.
 	 */
-	private List<RequestHandler> rhs = new ArrayList<RequestHandler>();
+	private List<IPeer> rhs = new ArrayList<IPeer>();
 	
 	private FileManager fm;
 
@@ -41,7 +42,7 @@ public class Server implements Runnable {
 			while (!ss.isClosed()) {
 				Socket s = ss.accept();
 				
-				RequestHandler rh = new RequestHandler(s, fm);
+				NetworkPeer rh = new NetworkPeer(s, fm);
 				
 				rhs.add(rh);
 				
@@ -49,6 +50,8 @@ public class Server implements Runnable {
 			}
 			
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ProtocolException e) {
 			e.printStackTrace();
 		} finally {
 			if (ss != null) {
