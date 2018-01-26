@@ -1,8 +1,8 @@
 package poafs.file.tracking;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.List;
+import java.net.InetAddress;
+import java.util.Collection;
 
 import poafs.exception.ProtocolException;
 import poafs.file.FileMeta;
@@ -20,21 +20,22 @@ public interface ITracker {
 	 * @return The hostname of the peer.
 	 * @throws IOException 
 	 */
-	public InetSocketAddress getHostForPeer(String peerId) throws ProtocolException;
+	public InetAddress getHostForPeer(String peerId) throws ProtocolException;
 	
-	public List<String> findBlock(String fileId, int blockIndex) throws ProtocolException;
+	public Collection<String> findBlock(String fileId, int blockIndex) throws ProtocolException;
 	
 	/**
 	 * Register that this peer has received a file block.
+	 * @param peerId The peer that recieved the file block.
 	 * @param fileId The id of the file.
 	 * @param index The index of the block.
 	 */
-	public void registerTransfer(String fileId, int index) throws ProtocolException;
+	public void registerTransfer(String peerId, String fileId, int index) throws ProtocolException;
 	
 	/**
 	 * List all available files on this auth server.
 	 * @return A list of files.
 	 * @throws IOException 
 	 */
-	public List<FileMeta> listFiles() throws ProtocolException;
+	public Collection<FileMeta> listFiles() throws ProtocolException;
 }

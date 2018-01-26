@@ -29,7 +29,7 @@ import poafs.file.FileBlock;
 import poafs.file.FileManager;
 import poafs.file.FileMeta;
 import poafs.file.PoafsFile;
-import poafs.file.tracking.DummyTracker;
+import poafs.file.tracking.NetTracker;
 import poafs.file.tracking.ITracker;
 import poafs.lib.Reference;
 import poafs.net.Server;
@@ -69,7 +69,7 @@ public class Network {
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
 		this.auth = new EthAuth(creds);
-		tracker = new DummyTracker();
+		tracker = new NetTracker();
 		
 		//start the local server
 		new Thread(new Server(Reference.DEFAULT_PORT, fileManager)).start();

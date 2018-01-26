@@ -2,9 +2,11 @@ package poafs.peer;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import poafs.exception.ProtocolException;
 import poafs.file.FileBlock;
+import poafs.file.tracking.PeerInfo;
 
 public interface IPeer {
 	/**
@@ -35,4 +37,10 @@ public interface IPeer {
 	 * @return The peer's id.
 	 */
 	String getId();
+	
+	/**
+	 * Get a list of all the peers this peer knows about.
+	 * @return A list of peer info objects.
+	 */
+	public List<PeerInfo> getKnownPeers();
 }
