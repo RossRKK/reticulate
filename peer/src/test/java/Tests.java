@@ -1,8 +1,6 @@
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -21,16 +19,9 @@ import org.junit.Test;
 import poafs.cryto.HybridDecrypter;
 import poafs.cryto.HybridEncrypter;
 import poafs.exception.KeyException;
-import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
-import poafs.file.FileManager;
 import poafs.file.PoafsFile;
-import poafs.lib.Reference;
-import poafs.peer.DummyPeer;
-import poafs.peer.IPeer;
-import poafs.peer.NetworkPeer;
-import poafs.peer.Server;
 
 public class Tests {
 	/**
@@ -90,7 +81,7 @@ public class Tests {
 	}
 	
 	
-	@Test
+	/*@Test
 	public void peerTest() throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, KeyException, ProtocolException {
 		KeyPair keys = buildRSAKeyPair();
 		
@@ -107,7 +98,7 @@ public class Tests {
 		for (int i = 0; i < data.length; i++) {
 			assertEquals(data[i], returned.getContent()[i]);
 		}
-	}
+	}*/
 	
 	@Test
 	public void saveTest() throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, IOException {

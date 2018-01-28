@@ -3,6 +3,7 @@ package poafs.file.tracking;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import poafs.exception.ProtocolException;
@@ -20,9 +21,9 @@ public interface ITracker {
 	 * @return The hostname of the peer.
 	 * @throws IOException 
 	 */
-	public InetSocketAddress getHostForPeer(String peerId) throws ProtocolException;
+	public InetSocketAddress getHostForPeer(String peerId);
 	
-	public Collection<String> findBlock(String fileId, int blockIndex) throws ProtocolException;
+	public Collection<String> findBlock(String fileId, int blockIndex);
 	
 	/**
 	 * Register that this peer has received a file block.
@@ -30,7 +31,7 @@ public interface ITracker {
 	 * @param fileId The id of the file.
 	 * @param index The index of the block.
 	 */
-	public void registerTransfer(String peerId, String fileId, int index) throws ProtocolException;
+	public void registerTransfer(String peerId, String fileId, int index);
 	
 	/**
 	 * List all available files on this auth server.
@@ -49,4 +50,8 @@ public interface ITracker {
 	public Map<String,PeerInfo> getPeers();
 
 	public Map<String, FileInfo> getFiles();
+
+	public void registerPeers(Collection<PeerInfo> knownPeers);
+
+	public void registerFiles(String peerId, Map<String, List<Integer>> availableFiles);
 }

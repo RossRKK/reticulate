@@ -24,6 +24,7 @@ import poafs.file.PoafsFile;
 import poafs.file.tracking.ITracker;
 import poafs.file.tracking.PeerInfo;
 import poafs.lib.Reference;
+import poafs.util.BindableIO;
 
 /**
  * A peer that is somewhere else on the network.
@@ -40,12 +41,14 @@ public class NetworkPeer implements IPeer {
 	/**
 	 * The output stream to the peer.
 	 */
-	private PrintWriter out;
+	//private PrintWriter out;
 	
 	/**
 	 * The scanner that reads input from the other peer.
 	 */
-	private Scanner sc;
+	//private Scanner sc;
+	
+	private BindableIO io;
 	
 	/**
 	 * The id of the peer.
@@ -73,21 +76,27 @@ public class NetworkPeer implements IPeer {
 			this.fm = fm;
 			this.t = t;
 			
-			out = new PrintWriter(s.getOutputStream());
-			sc = new Scanner(s.getInputStream());
+			/*out = new PrintWriter(s.getOutputStream());
+			sc = new Scanner(s.getInputStream());*/
 			
-			out.println("Reticulate 0.1");
-			out.println(Application.getPropertiesManager().getPeerId());
+			io = new BindableIO(s.getInputStream(), s.getOutputStream());
 			
-			out.flush();
+			String bindId = io.bind();
+			
+			io.println("Reticulate 0.1", bindId);
+			
+			io.println(Application.getPropertiesManager().getPeerId(), bindId);
+			//out.flush();
 			
 			
 			//TODO check that protocol versions are compatible
-			String versionDec = sc.nextLine();
-	
-			this.id = sc.nextLine();
+			String versionDec = io.nextLine(bindId);
+			this.id = io.nextLine(bindId);
+			
 			//register this peer with the tracker
 			t.registerPeer(id, new InetSocketAddress(s.getInetAddress().getHostName(), s.getPort()));
+			
+			io.unbind(bindId);
 			
 			//start the peer listening in a new thread
 			new Thread(this).start();
@@ -105,7 +114,7 @@ public class NetworkPeer implements IPeer {
 			
 			//read all requests for file segments
 			while (!s.isClosed()) {
-				String request = sc.nextLine();
+				String request = io.nextLine(null);
 				
 				StringTokenizer tokens = new StringTokenizer(request);
 				
@@ -122,10 +131,10 @@ public class NetworkPeer implements IPeer {
 						break;
 				}
 				
-				out.flush();
+				//out.flush();
 			}
 			
-			sc.close();
+			//sc.close();
 		} finally {
 			try {
 				s.close();
@@ -140,6 +149,8 @@ public class NetworkPeer implements IPeer {
 	 * @param request The file block that they fetched.
 	 */
 	private void fetch(String request) {
+		String bindId = io.bind();
+		
 		//requests should take the form <file id>:<block index>
 		String[] info = request.split(":");
 		String fileId = info[0];
@@ -148,45 +159,51 @@ public class NetworkPeer implements IPeer {
 		EncryptedFileBlock block = (EncryptedFileBlock) fm.getFileBlock(fileId, blockIndex);
 		
 		//out.write(block.getContent());
-		out.println(Base64.getEncoder().encodeToString(block.getContent()));
+		io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
 		
-		out.flush();
+		io.unbind(bindId);
+		//out.flush();
 	}
 	
 	/**
 	 * Send back a list of known peers and their associated addresses
 	 */
 	private synchronized void knownPeers() {
+		String bindId = io.bind();
 		//get all the peers we know about
 		Map<String, PeerInfo> peers = t.getPeers();
 		
 		//tell the remote peer how many entries to expect
-		out.println("length " + peers.size());
+		io.println("length " + peers.size(), bindId);
 		
 		for (Entry<String, PeerInfo> entry:peers.entrySet()) {
 			//output the id and address of the peer as "<peer id> <host name>:<port>"
-			out.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort());
+			io.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort(), bindId);
 			
-			out.flush();
+			//out.flush();
 		}
+		
+		io.unbind(bindId);
 	}
 	
 	
 	/**
 	 * Request known peers of the remote peer.
 	 */
+	@Override
 	public synchronized Set<PeerInfo> requestKnownPeers() {
+		String bindId = io.bind();
 		Set<PeerInfo> peers = new HashSet<PeerInfo>();
 		
-		out.println("known-peers");
-		out.flush();
+		io.println("known-peers", bindId);
+		//out.flush();
 		
-		String[] lengthLine = sc.nextLine().split(" ");
+		String[] lengthLine = io.nextLine(bindId).split(" ");
 		int length = Integer.parseInt(lengthLine[1]);
 		
 		//read each line that has peer info on it
 		for (int i = 0; i < length; i++) {
-			String line = sc.nextLine();
+			String line = io.nextLine(bindId);
 			
 			StringTokenizer tokens = new StringTokenizer(line, " :");
 			//parse the details
@@ -198,6 +215,8 @@ public class NetworkPeer implements IPeer {
 			peers.add(new PeerInfo(id, new InetSocketAddress(host, port)));
 		}
 		
+		io.unbind(bindId);
+		
 		return peers;
 	}
 	
@@ -205,42 +224,48 @@ public class NetworkPeer implements IPeer {
 	 * Send back a list of available files
 	 */
 	private synchronized void availableFiles() {
+		String bindId = io.bind();
 		//get all the peers we know about
 		Map<String, PoafsFile> files = fm.getAvailableFiles();
 		
 		
 		//tell the remote peer how many entries to expect
-		out.println("length " + files.size());
+		io.println("length " + files.size(), bindId);
 		
 		for (Entry<String, PoafsFile> entry:files.entrySet()) {
 			//output the id and address of the peer as "<peer id> <host name>:<port>"
-			out.println(entry.getKey() + " ");
+			io.println(entry.getKey() + " ", bindId);
 			
 			//print the block indcies that the local peer has a copy of
 			for (Entry<Integer, FileBlock> block:entry.getValue().getBlocks().entrySet()) {
-				out.print(block.getKey() + ",");
+				io.print(block.getKey() + ",", bindId);
 			}
 			
-			out.flush();
+			//out.flush();
 		}
+		
+		io.unbind(bindId);
 	}
 	
 	/**
 	 * Request which files are available from the remote peer.
 	 * @return A map containing available file ids and block indicies.
 	 */
+	@Override
 	public synchronized Map<String, List<Integer>> requestAvailableFiles() {
+		String bindId = io.bind();
+		
 		Map<String, List<Integer>> files = new HashMap<String, List<Integer>>();
 		
-		out.println("available-files");
-		out.flush();
+		io.println("available-files", bindId);
+		//out.flush();
 		
-		String[] lengthLine = sc.nextLine().split(" ");
+		String[] lengthLine = io.nextLine(bindId).split(" ");
 		int length = Integer.parseInt(lengthLine[1]);
 		
 		//read each line that has peer info on it
 		for (int i = 0; i < length; i++) {
-			String[] line = sc.nextLine().split(" ");
+			String[] line = io.nextLine(bindId).split(" ");
 			
 			
 			String id = line[0];
@@ -254,6 +279,8 @@ public class NetworkPeer implements IPeer {
 			
 			files.put(id, indicies);
 		}
+		
+		io.unbind(bindId);
 		
 		return files;
 	}
@@ -269,13 +296,14 @@ public class NetworkPeer implements IPeer {
 	@Override
 	public synchronized FileBlock requestBlock(String fileId, int index) throws ProtocolException {
 		try {
+			String bindId = io.bind();
 			String request = fileId + ":" + index;
 			
-			out.println(request);
+			io.println(request, bindId);
 			
-			out.flush();
+			//out.flush();
 			
-			return readResponse(index);
+			return readResponse(index, bindId);
 		} catch (IndexOutOfBoundsException | NumberFormatException e) {
 			throw new ProtocolException("Error retrieving block from peer " + id);
 		}
@@ -286,11 +314,13 @@ public class NetworkPeer implements IPeer {
 	 * @return The required block.
 	 * @throws ProtocolException 
 	 */
-	private synchronized FileBlock readResponse(int index) throws ProtocolException {
+	private synchronized FileBlock readResponse(int index, String bindId) throws ProtocolException {
 		try {
 			//read in the content of the block
-			String content64 = sc.nextLine();
+			String content64 = io.nextLine(bindId);
 			byte[] content = Base64.getDecoder().decode(content64);
+			
+			io.unbind(bindId);
 			
 			//return the relevant block
 			return new EncryptedFileBlock(id, content, index, null);

@@ -46,6 +46,8 @@ public class Server implements Runnable {
 			while (!ss.isClosed()) {
 				Socket s = ss.accept();
 				
+				System.out.println("Recieved remote connection from: " + s.getInetAddress().getHostName() + ":" + s.getPort());
+				
 				NetworkPeer peer = new NetworkPeer(s, t, fm);
 				
 				connectedPeers.add(peer);

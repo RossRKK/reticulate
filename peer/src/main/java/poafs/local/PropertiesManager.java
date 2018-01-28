@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.PublicKey;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -57,15 +56,15 @@ public class PropertiesManager {
 
 			System.out.println("Peer ID: " + peerId);
 			
-			knownPeerId = prop.getProperty("knowPeerId");
+			knownPeerId = prop.getProperty("knownPeerId");
 			
 			System.out.println("Known Peer ID: " + knownPeerId);
 			
-			knownPeerAddress = prop.getProperty("knowPeerAddress");
+			knownPeerAddress = prop.getProperty("knownPeerAddress");
 			
 			System.out.println("Known Peer Address: " + knownPeerAddress);
 			
-			knownPeerPort = Integer.parseInt(prop.getProperty("knowPeerPort"));
+			knownPeerPort = Integer.parseInt(prop.getProperty("knownPeerPort"));
 			
 			System.out.println("Known Peer Port: " + knownPeerPort);
 			

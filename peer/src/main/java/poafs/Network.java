@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -34,6 +35,7 @@ import poafs.file.tracking.ITracker;
 import poafs.file.tracking.NetTracker;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
+import poafs.peer.IPeer;
 import poafs.peer.NetworkPeer;
 import poafs.peer.Server;
 
@@ -67,8 +69,6 @@ public class Network {
 	private FileManager fileManager = new FileManager();
 	
 	public Network(String path, String pass) throws ProtocolException, IOException, CipherException {
-		PropertiesManager pm = Application.getPropertiesManager();
-		
 		Credentials creds = WalletUtils.loadCredentials(pass, path);
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
@@ -79,11 +79,32 @@ public class Network {
 		//start the local server
 		new Thread(new Server(Reference.DEFAULT_PORT, tracker, fileManager)).start();
 		
-		//register the local peer with the tracker
-		//tracker.registerPeer(Application.getPropertiesManager().getPeerId(), new InetSocketAddress("localhost", Reference.DEFAULT_PORT));
-		tracker.registerPeer(pm.getKnownPeerId(), new InetSocketAddress(pm.getKnownPeerAddress(), pm.getKnownPeerPort()));
+		connect();
+	}
+	
+	/**
+	 * Connect to the known peer.
+	 * @throws IOException 
+	 * @throws ProtocolException 
+	 * @throws UnknownHostException 
+	 */
+	private void connect() throws UnknownHostException, ProtocolException, IOException {
+		PropertiesManager pm = Application.getPropertiesManager();
 		
-		new NetworkPeer(new Socket(pm.getKnownPeerAddress(), pm.getKnownPeerPort()), tracker, fileManager);
+		if (pm.getKnownPeerId() != "") {
+			
+			tracker.registerPeer(pm.getKnownPeerId(), new InetSocketAddress(pm.getKnownPeerAddress(), pm.getKnownPeerPort()));
+			
+			IPeer knownPeer = new NetworkPeer(new Socket(pm.getKnownPeerAddress(), pm.getKnownPeerPort()), tracker, fileManager);
+			
+			System.out.println("Connected to known peer");
+			
+			tracker.registerPeers(knownPeer.requestKnownPeers());
+			System.out.println("Fetched known peers");
+			
+			tracker.registerFiles(pm.getKnownPeerId(), knownPeer.requestAvailableFiles());
+			System.out.println("Fetched known files");
+		}
 	}
 	
 	public static SecretKey buildAESKey() throws NoSuchAlgorithmException {

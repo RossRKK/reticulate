@@ -1,6 +1,8 @@
 package poafs.peer;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import poafs.exception.ProtocolException;
 import poafs.file.FileBlock;
@@ -34,4 +36,8 @@ public interface IPeer extends Runnable {
 	 * @return A list of peer info objects.
 	 */
 	public List<PeerInfo> getKnownPeers() throws ProtocolException;
+
+	public Map<String, List<Integer>> requestAvailableFiles();
+
+	public Set<PeerInfo> requestKnownPeers();
 }

@@ -282,11 +282,11 @@ class  BlockFetcher implements Runnable {
 	 */
 	private FileBlock getBlock(String fileId, int block) throws ProtocolException, NoValidPeersException {
 		//attempt to load a local copy of the file block
-		FileBlock local = fm.getFileBlock(fileId, block);
+		/*FileBlock local = fm.getFileBlock(fileId, block);
 		if (local != null) {
 			//return the local file if we have it
 			return local;
-		} else {
+		} else {*/
 			//fetch the file from the network
 			
 			long startTime = System.currentTimeMillis();
@@ -303,10 +303,11 @@ class  BlockFetcher implements Runnable {
 					
 					InetSocketAddress addr = t.getHostForPeer(peerId);
 					
-						
+					System.out.println("Fetching from: " + addr.getHostName());
 					//get the block off of the peer
 					IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
 					
+					System.out.println("Requesting block: " + fileId + ":" + block);
 					FileBlock out = peer.requestBlock(fileId, block);
 					
 					long time = System.currentTimeMillis() - startTime;
@@ -335,6 +336,6 @@ class  BlockFetcher implements Runnable {
 				}
 			}
 			throw new NoValidPeersException();
-		}
+		//}
 	}
 }

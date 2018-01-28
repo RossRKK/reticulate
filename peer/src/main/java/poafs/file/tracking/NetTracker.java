@@ -1,14 +1,15 @@
 package poafs.file.tracking;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
-import poafs.Application;
 import poafs.exception.ProtocolException;
-import poafs.file.FileManager;
 
 public class NetTracker implements ITracker {
 	
@@ -24,12 +25,12 @@ public class NetTracker implements ITracker {
 	
 
 	@Override
-	public InetSocketAddress getHostForPeer(String peerId) throws ProtocolException {
+	public InetSocketAddress getHostForPeer(String peerId) {
 		return peers.get(peerId).getAddr();
 	}
 
 	@Override
-	public Set<String> findBlock(String fileId, int blockIndex) throws ProtocolException {
+	public Set<String> findBlock(String fileId, int blockIndex) {
 		if (files.get(fileId) == null) {
 			Set<String> peers = new HashSet<String>();
 			return peers;
@@ -40,7 +41,7 @@ public class NetTracker implements ITracker {
 	
 
 	@Override
-	public void registerTransfer(String peerId, String fileId, int index) throws ProtocolException {
+	public void registerTransfer(String peerId, String fileId, int index) {
 		if (peers.containsKey(peerId)) {
 			peers.get(peerId).addFileBlock(fileId, index);
 		}
@@ -70,6 +71,22 @@ public class NetTracker implements ITracker {
 	@Override
 	public Map<String, FileInfo> getFiles() {
 		return files;
+	}
+
+	@Override
+	public void registerPeers(Collection<PeerInfo> peers) {
+		for (PeerInfo p:peers) {
+			this.peers.put(p.getPeerId(), p);
+		}
+	}
+	
+	@Override
+	public void registerFiles(String peerId, Map<String, List<Integer>> availableFiles) {
+		for(Entry<String, List<Integer>> entry:availableFiles.entrySet()) {
+			for (int index:entry.getValue()) {
+				registerTransfer(peerId, entry.getKey(), index);
+			}
+		}
 	}
 
 }
