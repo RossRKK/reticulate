@@ -20,6 +20,21 @@ public class PropertiesManager {
 	private String peerId;
 	
 	/**
+	 * The ID of the known peer.
+	 */
+	private String knownPeerId;
+	
+	/**
+	 * The address of the known peer.
+	 */
+	private String knownPeerAddress;
+	
+	/**
+	 * The port that the known peer works on.
+	 */
+	private int knownPeerPort;
+	
+	/**
 	 * The properties object.
 	 */
 	private Properties prop = new Properties();
@@ -41,6 +56,19 @@ public class PropertiesManager {
 			peerId = prop.getProperty("peerId");
 
 			System.out.println("Peer ID: " + peerId);
+			
+			knownPeerId = prop.getProperty("knowPeerId");
+			
+			System.out.println("Known Peer ID: " + knownPeerId);
+			
+			knownPeerAddress = prop.getProperty("knowPeerAddress");
+			
+			System.out.println("Known Peer Address: " + knownPeerAddress);
+			
+			knownPeerPort = Integer.parseInt(prop.getProperty("knowPeerPort"));
+			
+			System.out.println("Known Peer Port: " + knownPeerPort);
+			
 		} catch (FileNotFoundException e) { 
 			setDefaultProperties();
 		} catch (IOException ex) {
@@ -86,5 +114,21 @@ public class PropertiesManager {
 
 	public String getPeerId() {
 		return peerId;
+	}
+
+	public String getKnownPeerId() {
+		return knownPeerId;
+	}
+
+	public String getKnownPeerAddress() {
+		return knownPeerAddress;
+	}
+
+	public int getKnownPeerPort() {
+		return knownPeerPort;
+	}
+
+	public Properties getProp() {
+		return prop;
 	}
 }

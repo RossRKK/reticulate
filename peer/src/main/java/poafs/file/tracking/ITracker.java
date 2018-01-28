@@ -1,12 +1,11 @@
 package poafs.file.tracking;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Map;
 
 import poafs.exception.ProtocolException;
-import poafs.file.FileMeta;
 
 /**
  * Interface for something that tracks the lcoations of files.
@@ -46,4 +45,6 @@ public interface ITracker {
 	 * @param addr The address of the peer.
 	 */
 	public void registerPeer(String peerId, InetSocketAddress addr);
+	
+	public Map<String,PeerInfo> getPeers();
 }

@@ -8,6 +8,7 @@ import java.util.List;
 
 import poafs.exception.ProtocolException;
 import poafs.file.FileManager;
+import poafs.file.tracking.ITracker;
 
 /**
  * The internal server of a peer.
@@ -24,13 +25,16 @@ public class Server implements Runnable {
 	/**
 	 * All of the open requests.
 	 */
-	private List<IPeer> rhs = new ArrayList<IPeer>();
+	private List<IPeer> connectedPeers = new ArrayList<IPeer>();
 	
 	private FileManager fm;
 
-	public Server(int port, FileManager fm) {
+	private ITracker t;
+
+	public Server(int port, ITracker t, FileManager fm) {
 		this.port = port;
 		this.fm = fm;
+		this.t = t;
 	}
 	
 	@Override
@@ -42,11 +46,9 @@ public class Server implements Runnable {
 			while (!ss.isClosed()) {
 				Socket s = ss.accept();
 				
-				NetworkPeer rh = new NetworkPeer(s, fm);
+				NetworkPeer peer = new NetworkPeer(s, t, fm);
 				
-				rhs.add(rh);
-				
-				new Thread(rh).start();
+				connectedPeers.add(peer);
 			}
 			
 		} catch (IOException e) {

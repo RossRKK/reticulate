@@ -281,25 +281,31 @@ class  BlockFetcher implements Runnable {
 	 * @throws IOException 
 	 */
 	private FileBlock getBlock(String fileId, int block) throws ProtocolException, NoValidPeersException {
-		long startTime = System.currentTimeMillis();
-		
-		Random r = new Random();
-		Collection<String> peerIds = t.findBlock(fileId, block);
-		String peerId = null;
-		
-		//loop until we get the block or run out of peers
-		while (!peerIds.isEmpty()) {
-			try {
-				//choose a random peer
-				peerId = peerIds.toArray(new String[peerIds.size()])[r.nextInt(peerIds.size())];
-				
-				InetSocketAddress addr = t.getHostForPeer(peerId);
-				
-				//only go to the network if there isn't a local copy
-				if (addr.getHostName() != "localhost") {
+		//attempt to load a local copy of the file block
+		FileBlock local = fm.getFileBlock(fileId, block);
+		if (local != null) {
+			//return the local file if we have it
+			return local;
+		} else {
+			//fetch the file from the network
+			
+			long startTime = System.currentTimeMillis();
+			
+			Random r = new Random();
+			Collection<String> peerIds = t.findBlock(fileId, block);
+			String peerId = null;
+			
+			//loop until we get the block or run out of peers
+			while (!peerIds.isEmpty()) {
+				try {
+					//choose a random peer
+					peerId = peerIds.toArray(new String[peerIds.size()])[r.nextInt(peerIds.size())];
 					
+					InetSocketAddress addr = t.getHostForPeer(peerId);
+					
+						
 					//get the block off of the peer
-					IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), fm);
+					IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
 					
 					FileBlock out = peer.requestBlock(fileId, block);
 					
@@ -310,25 +316,25 @@ class  BlockFetcher implements Runnable {
 					
 					
 					return out;
-				} else {
-					return fm.getFileBlock(fileId, block);
-				}
-			} catch (IOException e) {
-				System.err.println(peerId + " was unreachable");
-				peerIds.remove(peerId);
-				
-				if (peerIds.size() == 0) {
-					break;
-				}
-			} catch (ProtocolException e) {
-				System.err.println(e.getMessage());
-				peerIds.remove(peerId);
-				
-				if (peerIds.size() == 0) {
-					break;
+				} catch (IOException e) {
+					System.err.println(peerId + " was unreachable");
+					peerIds.remove(peerId);
+					
+					//TODO tell the tracker that the peer couldn't be reached
+					
+					if (peerIds.size() == 0) {
+						break;
+					}
+				} catch (ProtocolException e) {
+					System.err.println(e.getMessage());
+					peerIds.remove(peerId);
+					
+					if (peerIds.size() == 0) {
+						break;
+					}
 				}
 			}
+			throw new NoValidPeersException();
 		}
-		throw new NoValidPeersException();
 	}
 }

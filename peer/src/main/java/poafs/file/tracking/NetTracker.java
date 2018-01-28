@@ -3,6 +3,7 @@ package poafs.file.tracking;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import poafs.Application;
@@ -16,13 +17,11 @@ public class NetTracker implements ITracker {
 	 */
 	private HashMap<String, PeerInfo> peers = new HashMap<String, PeerInfo>();
 	
+	/**
+	 * The locations of all known files.
+	 */
 	private HashMap<String, FileInfo> files = new HashMap<String, FileInfo>();
 	
-	private FileManager fm;
-	
-	public NetTracker(FileManager fm) {
-		this.fm = fm;
-	}
 
 	@Override
 	public InetSocketAddress getHostForPeer(String peerId) throws ProtocolException {
@@ -33,9 +32,6 @@ public class NetTracker implements ITracker {
 	public Set<String> findBlock(String fileId, int blockIndex) throws ProtocolException {
 		if (files.get(fileId) == null) {
 			Set<String> peers = new HashSet<String>();
-			if (fm.getFileBlock(fileId, blockIndex) != null) {
-				peers.add(Application.getPropertiesManager().getPeerId());
-			}
 			return peers;
 		} else {
 			return files.get(fileId).getPeerIdsForBlock(blockIndex);
@@ -64,6 +60,11 @@ public class NetTracker implements ITracker {
 	@Override
 	public FileInfo[] listFiles() throws ProtocolException {
 		return (FileInfo[])files.entrySet().parallelStream().map(e -> e.getValue()).toArray();
+	}
+
+	@Override
+	public Map<String, PeerInfo> getPeers() {
+		return peers;
 	}
 
 }
