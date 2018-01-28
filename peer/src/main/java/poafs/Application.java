@@ -39,9 +39,9 @@ public class Application {
 	
 	public static void main(String[] args) throws IOException, ProtocolException, KeyException {
 		try {
-			pm.loadProperties();
+			pm.loadProperties(args[0]);
 			
-			net = new Network(args[0], args[1]);
+			net = new Network(pm.getWalletPath(), pm.getWalletPass());
 			
 			new Thread(new WebServer(8080, net)).start();
 			

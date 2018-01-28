@@ -34,6 +34,16 @@ public class PropertiesManager {
 	private int knownPeerPort;
 	
 	/**
+	 * The path to the wallet file.
+	 */
+	private String walletPath;
+	
+	/**
+	 * The password for the wallet.
+	 */
+	private String walletPass;
+	
+	/**
 	 * The properties object.
 	 */
 	private Properties prop = new Properties();
@@ -42,11 +52,11 @@ public class PropertiesManager {
 	 * Load this peers properties from the properties file.
 	 * @throws FileNotFoundException 
 	 */
-	public void loadProperties() {
+	public void loadProperties(String path) {
 		InputStream input = null;
 		try {
 
-			input = new FileInputStream(Reference.CONFIG_PATH);
+			input = new FileInputStream(path);
 
 			// load a properties file
 			prop.load(input);
@@ -67,6 +77,9 @@ public class PropertiesManager {
 			knownPeerPort = Integer.parseInt(prop.getProperty("knownPeerPort"));
 			
 			System.out.println("Known Peer Port: " + knownPeerPort);
+			
+			walletPath = prop.getProperty("walletPath");
+			walletPass = prop.getProperty("walletPass");
 			
 		} catch (FileNotFoundException e) { 
 			setDefaultProperties();
@@ -129,5 +142,13 @@ public class PropertiesManager {
 
 	public Properties getProp() {
 		return prop;
+	}
+
+	public String getWalletPath() {
+		return walletPath;
+	}
+
+	public String getWalletPass() {
+		return walletPass;
 	}
 }
