@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
 import poafs.file.FileManager;
+import poafs.file.PoafsFile;
 import poafs.file.tracking.ITracker;
 import poafs.file.tracking.PeerInfo;
 import poafs.lib.Reference;
@@ -114,6 +117,9 @@ public class NetworkPeer implements IPeer {
 					case "known-peers":
 						knownPeers();
 						break;
+					case "available-files":
+						availableFiles();
+						break;
 				}
 				
 				out.flush();
@@ -148,7 +154,7 @@ public class NetworkPeer implements IPeer {
 	}
 	
 	/**
-	 * Send back a list of known peers and their associated file blocks
+	 * Send back a list of known peers and their associated addresses
 	 */
 	private synchronized void knownPeers() {
 		//get all the peers we know about
@@ -164,6 +170,7 @@ public class NetworkPeer implements IPeer {
 			out.flush();
 		}
 	}
+	
 	
 	/**
 	 * Request known peers of the remote peer.
@@ -192,6 +199,63 @@ public class NetworkPeer implements IPeer {
 		}
 		
 		return peers;
+	}
+	
+	/**
+	 * Send back a list of available files
+	 */
+	private synchronized void availableFiles() {
+		//get all the peers we know about
+		Map<String, PoafsFile> files = fm.getAvailableFiles();
+		
+		
+		//tell the remote peer how many entries to expect
+		out.println("length " + files.size());
+		
+		for (Entry<String, PoafsFile> entry:files.entrySet()) {
+			//output the id and address of the peer as "<peer id> <host name>:<port>"
+			out.println(entry.getKey() + " ");
+			
+			//print the block indcies that the local peer has a copy of
+			for (Entry<Integer, FileBlock> block:entry.getValue().getBlocks().entrySet()) {
+				out.print(block.getKey() + ",");
+			}
+			
+			out.flush();
+		}
+	}
+	
+	/**
+	 * Request which files are available from the remote peer.
+	 * @return A map containing available file ids and block indicies.
+	 */
+	public synchronized Map<String, List<Integer>> requestAvailableFiles() {
+		Map<String, List<Integer>> files = new HashMap<String, List<Integer>>();
+		
+		out.println("available-files");
+		out.flush();
+		
+		String[] lengthLine = sc.nextLine().split(" ");
+		int length = Integer.parseInt(lengthLine[1]);
+		
+		//read each line that has peer info on it
+		for (int i = 0; i < length; i++) {
+			String[] line = sc.nextLine().split(" ");
+			
+			
+			String id = line[0];
+			StringTokenizer tokens = new StringTokenizer(line[1], ",");
+			
+			//parse all of the indicies
+			List<Integer> indicies = new ArrayList<Integer>();
+			while (tokens.hasMoreTokens()) {
+				indicies.add(Integer.parseInt(tokens.nextToken()));
+			}
+			
+			files.put(id, indicies);
+		}
+		
+		return files;
 	}
 
 	/**

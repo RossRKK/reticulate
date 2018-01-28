@@ -47,4 +47,6 @@ public interface ITracker {
 	public void registerPeer(String peerId, InetSocketAddress addr);
 	
 	public Map<String,PeerInfo> getPeers();
+
+	public Map<String, FileInfo> getFiles();
 }

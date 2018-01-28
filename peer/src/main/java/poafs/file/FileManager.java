@@ -99,4 +99,9 @@ public class FileManager {
 		availableFiles.put(file.getId(), file);
 	}
 
+	public HashMap<String, PoafsFile> getAvailableFiles() {
+		//TODO add the availble files on the disk without loading them
+		return availableFiles;
+	}
+
 }

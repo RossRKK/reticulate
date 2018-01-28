@@ -67,4 +67,9 @@ public class NetTracker implements ITracker {
 		return peers;
 	}
 
+	@Override
+	public Map<String, FileInfo> getFiles() {
+		return files;
+	}
+
 }
