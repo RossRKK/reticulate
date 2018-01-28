@@ -53,6 +53,8 @@ public class BindableIO implements Runnable {
 	public void run() {
 		while (in.hasNextLine()) {
 			try {
+				shouldWaitForLine = true;
+				
 				line = in.nextLine();
 				
 				shouldWaitForLine = false;

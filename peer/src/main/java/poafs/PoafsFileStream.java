@@ -282,11 +282,11 @@ class  BlockFetcher implements Runnable {
 	 */
 	private FileBlock getBlock(String fileId, int block) throws ProtocolException, NoValidPeersException {
 		//attempt to load a local copy of the file block
-		/*FileBlock local = fm.getFileBlock(fileId, block);
+		FileBlock local = fm.getFileBlock(fileId, block);
 		if (local != null) {
 			//return the local file if we have it
 			return local;
-		} else {*/
+		} else {
 			//fetch the file from the network
 			
 			long startTime = System.currentTimeMillis();
@@ -336,6 +336,6 @@ class  BlockFetcher implements Runnable {
 				}
 			}
 			throw new NoValidPeersException();
-		//}
+		}
 	}
 }
