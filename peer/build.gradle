@@ -11,6 +11,10 @@ apply plugin: 'java-library'
 
 apply plugin: 'eclipse'
 
+apply plugin: 'application'
+
+mainClassName = "poafs.Application"
+
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
@@ -33,4 +37,5 @@ dependencies {
     
     compile ('org.web3j:core:3.2.0')
 }
+
 
