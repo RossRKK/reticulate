@@ -81,7 +81,7 @@ public class Network {
 		
 		
 		//start the local server
-		new Thread(new Server(Reference.DEFAULT_PORT, tracker, fileManager)).start();
+		new Thread(new Server(Reference.port, tracker, fileManager)).start();
 		
 		connect();
 	}

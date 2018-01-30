@@ -88,7 +88,7 @@ public class NetworkPeer implements IPeer {
 			//register this peer with the tracker
 			//TODO allow the port to be variable
 			//can't use s.getPort() because the port an outgoing connection leaves on is not the same as the port they are listening on
-			t.registerPeer(id, new InetSocketAddress(s.getInetAddress().getHostName(), Reference.DEFAULT_PORT));
+			t.registerPeer(id, new InetSocketAddress(s.getInetAddress().getHostName(), Reference.port));
 			
 			io.unbind(bindId);
 			
@@ -229,7 +229,7 @@ public class NetworkPeer implements IPeer {
 			//parse the details
 			String id = tokens.nextToken();
 			String host = tokens.nextToken();
-			int port =  tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : Reference.DEFAULT_PORT;
+			int port =  tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : Reference.port;
 			
 			//add the peer to the set
 			peers.add(new PeerInfo(id, new InetSocketAddress(host, port)));

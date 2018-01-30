@@ -16,6 +16,7 @@ import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.tracking.FileInfo;
 import poafs.gui.video.VideoPlayer;
+import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 
@@ -38,12 +39,16 @@ public class Application {
 	private static PropertiesManager pm = new PropertiesManager();
 	
 	public static void main(String[] args) throws IOException, ProtocolException, KeyException {
+		if (args.length > 1) {
+			Reference.port = Integer.parseInt(args[1]);
+		}
+		
 		try {
 			pm.loadProperties(args[0]);
 			
 			net = new Network(pm.getWalletPath(), pm.getWalletPass());
 			
-			new Thread(new WebServer(8080, net)).start();
+			//new Thread(new WebServer(8080, net)).start();
 			
 			//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
 			new NativeDiscovery().discover();
