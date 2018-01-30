@@ -9,10 +9,12 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -37,6 +39,7 @@ import poafs.file.PoafsFile;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.ITracker;
 import poafs.file.tracking.NetTracker;
+import poafs.file.tracking.PeerInfo;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.peer.IPeer;
@@ -235,11 +238,16 @@ public class Network {
 		throw new NoValidPeersException();
 	}
 	
-	public FileInfo[] listFiles() throws ProtocolException {
+	public List<FileInfo> listFiles() throws ProtocolException {
 		return tracker.listFiles();
 	}
 	
 	public PoafsFileStream fetchFile(String fileId) {
 		return new PoafsFileStream(fileId, 5, auth, keyStore, tracker, fileManager);
+	}
+
+	
+	public List<PeerInfo> listPeers() {
+		return tracker.getPeers().entrySet().parallelStream().map(e -> e.getValue()).collect(Collectors.toList());
 	}
 }

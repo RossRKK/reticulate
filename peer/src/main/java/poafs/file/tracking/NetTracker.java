@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import poafs.exception.ProtocolException;
 
@@ -59,8 +60,8 @@ public class NetTracker implements ITracker {
 	}
 
 	@Override
-	public FileInfo[] listFiles() throws ProtocolException {
-		return (FileInfo[])files.entrySet().parallelStream().map(e -> e.getValue()).toArray();
+	public List<FileInfo> listFiles() throws ProtocolException {
+		return files.entrySet().parallelStream().map(e -> e.getValue()).collect(Collectors.toList());
 	}
 
 	@Override

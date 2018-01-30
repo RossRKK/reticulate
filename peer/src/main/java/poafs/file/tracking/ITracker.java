@@ -38,7 +38,7 @@ public interface ITracker {
 	 * @return A list of files.
 	 * @throws IOException 
 	 */
-	public FileInfo[] listFiles() throws ProtocolException;
+	public List<FileInfo> listFiles() throws ProtocolException;
 
 	/**
 	 * Register a peer with this tracker.

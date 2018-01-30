@@ -15,6 +15,7 @@ import poafs.adapter.WebServer;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.tracking.FileInfo;
+import poafs.file.tracking.PeerInfo;
 import poafs.gui.video.VideoPlayer;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
@@ -66,12 +67,15 @@ public class Application {
 		while (!exit) {
 			String command = sc.nextLine();
 			switch (command) {
-				case "ls":
+				case "list-files":
 					try {
 						listFiles(net.listFiles());
 					} catch (ProtocolException e) {
 						System.err.println(e.getMessage());
 					}
+					break;
+				case "list-peers":
+					listPeers(net.listPeers());
 					break;
 				case "load":
 					printFile(net.fetchFile(sc.nextLine()));
@@ -115,6 +119,14 @@ public class Application {
 		sc.close();
 	}
 	
+	private static void listPeers(List<PeerInfo> peers) {
+		for (PeerInfo p:peers) {
+			System.out.println(p.getPeerId() + " " + p.getAddr());
+		}
+		System.out.println("End");
+		
+	}
+
 	private static void saveFile(InputStream fileStream) {
 		int in;
 		try {
@@ -179,10 +191,11 @@ public class Application {
 	 * Print out the list of files.
 	 * @param files The files to be listed.
 	 */
-	private static void listFiles(FileInfo[] files) {		
+	private static void listFiles(List<FileInfo> files) {		
 		for (FileInfo f:files) {
 			System.out.println(f.getFileId());
 		}
+		System.out.println("End");
 	}
 	
 	public static PropertiesManager getPropertiesManager() {
