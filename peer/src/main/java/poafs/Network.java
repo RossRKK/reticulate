@@ -225,9 +225,15 @@ public class Network {
 				return;
 			} catch (IOException e) {
 				System.err.println(peerId + " was unreachable");
+				
+				peers.remove(peerId);
+				
+				if (peers.size() == 0) {
+					break;
+				}
 			} catch (ProtocolException e) {
 				System.err.println(e.getMessage());
-			} finally {
+				
 				peers.remove(peerId);
 				
 				if (peers.size() == 0) {
