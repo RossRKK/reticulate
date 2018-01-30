@@ -222,7 +222,7 @@ public class Network {
 				System.out.println("Upload for " + fileId + ":" + block.getIndex() + " took " + 
 						time + "ms " + ((double)time)/block.getContent().length + "B/ms");
 				
-				break;
+				return;
 			} catch (IOException e) {
 				System.err.println(peerId + " was unreachable");
 			} catch (ProtocolException e) {

@@ -85,11 +85,6 @@ public class NetworkPeer implements IPeer {
 			String versionDec = io.nextLine(bindId);
 			this.id = io.nextLine(bindId);
 			
-			//register this peer with the tracker
-			//TODO allow the port to be variable
-			//can't use s.getPort() because the port an outgoing connection leaves on is not the same as the port they are listening on
-			t.registerPeer(id, new InetSocketAddress(s.getInetAddress().getHostName(), Reference.port));
-			
 			io.unbind(bindId);
 			
 			//start the peer listening in a new thread
@@ -197,10 +192,14 @@ public class NetworkPeer implements IPeer {
 		io.println("length " + peers.size(), bindId);
 		
 		for (Entry<String, PeerInfo> entry:peers.entrySet()) {
-			//output the id and address of the peer as "<peer id> <host name>:<port>"
-			io.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort(), bindId);
 			
-			//out.flush();
+			//ignore this peer we're clearly already connected and it doesn't really know what its own address is
+			//and our address might be weird aswell
+			if (!(entry.getKey().equals(this.id) || entry.getKey().equals(Application.getPropertiesManager().getPeerId()))) {
+				
+				//output the id and address of the peer as "<peer id> <host name>:<port>"
+				io.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort(), bindId);
+			}
 		}
 		
 		io.unbind(bindId);
@@ -231,8 +230,12 @@ public class NetworkPeer implements IPeer {
 			String host = tokens.nextToken();
 			int port =  tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : Reference.port;
 			
-			//add the peer to the set
-			peers.add(new PeerInfo(id, new InetSocketAddress(host, port)));
+			//ignore this peer we're clearly already connected and it doesn't really know what its own address is
+			//and our address might be weird aswell
+			if (!(id.equals(this.id) || id.equals(Application.getPropertiesManager().getPeerId()))) {
+				//add the peer to the set
+				peers.add(new PeerInfo(id, new InetSocketAddress(host, port)));
+			}
 		}
 		
 		io.unbind(bindId);
