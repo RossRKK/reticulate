@@ -9,9 +9,9 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
@@ -37,7 +37,6 @@ import poafs.file.PoafsFile;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.ITracker;
 import poafs.file.tracking.NetTracker;
-import poafs.file.tracking.PeerInfo;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.peer.IPeer;
@@ -193,18 +192,22 @@ public class Network {
 		long startTime = System.currentTimeMillis();
 		
 		Random r = new Random();
-		Map<String, PeerInfo> peers = tracker.getPeers();
+		Set<String> peers = tracker.getPeers().keySet();
+		
+		//remove the local peer from the set
+		peers.remove(Application.getPropertiesManager().getPeerId());
+		
 		String peerId = null;
 		
 		//loop until we get the block or run out of peers
 		while (!peers.isEmpty()) {
 			try {
 				//choose a random peer
-				peerId = peers.keySet().toArray(new String[peers.size()])[r.nextInt(peers.size())];
+				peerId = peers.toArray(new String[peers.size()])[r.nextInt(peers.size())];
 				
 				InetSocketAddress addr = tracker.getHostForPeer(peerId);
 				
-				System.out.println("Uploading to: " + addr.getHostName());
+				System.out.println("Uploading to " + peerId + " at " + addr.getHostName());
 				//get the block off of the peer
 				IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
 				
@@ -213,8 +216,10 @@ public class Network {
 				
 				long time = System.currentTimeMillis() - startTime;
 				
-				System.out.println("Fetch for " + fileId + ":" + block.getIndex() + " took " + 
+				System.out.println("Upload for " + fileId + ":" + block.getIndex() + " took " + 
 						time + "ms " + ((double)time)/block.getContent().length + "B/ms");
+				
+				break;
 			} catch (IOException e) {
 				System.err.println(peerId + " was unreachable");
 			} catch (ProtocolException e) {
