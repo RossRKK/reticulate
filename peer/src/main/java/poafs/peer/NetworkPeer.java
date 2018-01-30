@@ -39,15 +39,8 @@ public class NetworkPeer implements IPeer {
 	private Socket s;
 	
 	/**
-	 * The output stream to the peer.
+	 * The bindable IO stream used to communicate between peers.
 	 */
-	//private PrintWriter out;
-	
-	/**
-	 * The scanner that reads input from the other peer.
-	 */
-	//private Scanner sc;
-	
 	private BindableIO io;
 	
 	/**
@@ -356,22 +349,22 @@ public class NetworkPeer implements IPeer {
 		}
 	}
 
-
+	/**
+	 * Send a file block to the remote peer.
+	 * @param fileId The id of the file being sent.
+	 * @param block The file block being sent.
+	 */
 	@Override
-	public synchronized void sendBlock(String fileId, FileBlock block) throws ProtocolException {
-		try {
-			String bindId = io.bind();
-			
-			//tell the remote peer which block it's about to recieve
-			io.println("send " + fileId + ":" + block.getIndex(), bindId);
-			
-			//send the block content
-			io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
-			
-			io.unbind(bindId);
-		} catch (IndexOutOfBoundsException | NumberFormatException e) {
-			throw new ProtocolException("Error retrieving block from peer " + id);
-		}
+	public synchronized void sendBlock(String fileId, FileBlock block) {
+		String bindId = io.bind();
+		
+		//tell the remote peer which block it's about to recieve
+		io.println("send " + fileId + ":" + block.getIndex(), bindId);
+		
+		//send the block content
+		io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
+		
+		io.unbind(bindId);
 	}
 
 	@Override

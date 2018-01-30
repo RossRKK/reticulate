@@ -9,6 +9,9 @@ import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
@@ -25,6 +28,7 @@ import poafs.auth.EthAuth;
 import poafs.auth.IAuthenticator;
 import poafs.cryto.KeyStore;
 import poafs.exception.KeyException;
+import poafs.exception.NoValidPeersException;
 import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
@@ -33,6 +37,7 @@ import poafs.file.PoafsFile;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.ITracker;
 import poafs.file.tracking.NetTracker;
+import poafs.file.tracking.PeerInfo;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.peer.IPeer;
@@ -57,7 +62,7 @@ public class Network {
 	private IAuthenticator auth;
 	
 	/**
-	 * The encrypter to be used for all local files.
+	 * The key store used to encrypt and decrypt files.
 	 */
 	private KeyStore keyStore;
 	
@@ -166,6 +171,65 @@ public class Network {
 		System.out.println("Registered");
 	}
 
+	/**
+	 * Upload a file to the network.
+	 * @param fileId The id of the file to upload.
+	 * @throws NoValidPeersException 
+	 */
+	public void uploadFile(String fileId) throws NoValidPeersException {
+		PoafsFile file = fileManager.getFile(fileId);
+		
+		if (file != null) {
+			//upload each block
+			for (Entry<Integer, FileBlock> block:file.getBlocks().entrySet()) {
+				uploadBlock(fileId, block.getValue());
+			}
+		} else {
+			System.out.println(fileId + " doesn't exist locally, can't upload");
+		}
+	}
+	
+	private void uploadBlock(String fileId, FileBlock block) throws NoValidPeersException {
+		long startTime = System.currentTimeMillis();
+		
+		Random r = new Random();
+		Map<String, PeerInfo> peers = tracker.getPeers();
+		String peerId = null;
+		
+		//loop until we get the block or run out of peers
+		while (!peers.isEmpty()) {
+			try {
+				//choose a random peer
+				peerId = peers.keySet().toArray(new String[peers.size()])[r.nextInt(peers.size())];
+				
+				InetSocketAddress addr = tracker.getHostForPeer(peerId);
+				
+				System.out.println("Uploading to: " + addr.getHostName());
+				//get the block off of the peer
+				IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
+				
+				System.out.println("Uploading block: " + fileId + ":" + block.getIndex());
+				peer.sendBlock(fileId, block);
+				
+				long time = System.currentTimeMillis() - startTime;
+				
+				System.out.println("Fetch for " + fileId + ":" + block.getIndex() + " took " + 
+						time + "ms " + ((double)time)/block.getContent().length + "B/ms");
+			} catch (IOException e) {
+				System.err.println(peerId + " was unreachable");
+			} catch (ProtocolException e) {
+				System.err.println(e.getMessage());
+			} finally {
+				peers.remove(peerId);
+				
+				if (peers.size() == 0) {
+					break;
+				}
+			}
+		}
+		throw new NoValidPeersException();
+	}
+	
 	public FileInfo[] listFiles() throws ProtocolException {
 		return tracker.listFiles();
 	}

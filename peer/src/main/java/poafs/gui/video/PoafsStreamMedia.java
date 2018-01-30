@@ -1,4 +1,4 @@
-package poafs.gui;
+package poafs.gui.video;
 
 import java.io.IOException;
 import java.io.InputStream;

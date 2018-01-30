@@ -23,7 +23,7 @@ public class Server implements Runnable {
 	private int port;
 	
 	/**
-	 * All of the open requests.
+	 * All of the peers who have connected view this server.
 	 */
 	private List<IPeer> connectedPeers = new ArrayList<IPeer>();
 	

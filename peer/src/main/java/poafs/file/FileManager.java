@@ -15,12 +15,21 @@ public class FileManager {
 	private HashMap<String, PoafsFile> availableFiles = new HashMap<String, PoafsFile>();
 
 	/**
-	 * Get a file from the disk.
+	 * Get a file block from the disk.
 	 * @param fileId The id of the file.
 	 * @param index The index of the desired block.
 	 * @return The relevant file block.
 	 */
 	public FileBlock getFileBlock(String fileId, int index) {
+		return getFile(fileId).getBlocks().get(index);
+	}
+	
+	/**
+	 * Get a file from the disk.
+	 * @param fileId The id of the file.
+	 * @return The file.
+	 */
+	public PoafsFile getFile(String fileId) {
 		if (!availableFiles.containsKey(fileId)) {
 			try {
 				loadFile(fileId);
@@ -29,7 +38,7 @@ public class FileManager {
 			}
 		}
 		
-		return availableFiles.get(fileId).getBlocks().get(index);
+		return availableFiles.get(fileId);
 	}
 	
 	/**

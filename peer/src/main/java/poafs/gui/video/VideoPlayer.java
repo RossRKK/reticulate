@@ -1,4 +1,4 @@
-package poafs.gui;
+package poafs.gui.video;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

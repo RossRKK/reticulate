@@ -15,7 +15,7 @@ import poafs.adapter.WebServer;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.tracking.FileInfo;
-import poafs.gui.VideoPlayer;
+import poafs.gui.video.VideoPlayer;
 import poafs.local.PropertiesManager;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 
@@ -90,6 +90,13 @@ public class Application {
 			                new VideoPlayer(stream);
 			            }
 			        });
+					break;
+				case "upload":
+					try {
+						net.uploadFile(sc.nextLine());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 					break;
 				case "exit":
 				case "quit":

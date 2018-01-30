@@ -19,11 +19,11 @@ public interface IPeer extends Runnable {
 	FileBlock requestBlock(String fileId, int index) throws ProtocolException;
 
 	/**
-	 * Send a block to this peer.
-	 * @param fileId
-	 * @param block
+	 * Send a block to the remote peer.
+	 * @param fileId The id of the file being sent.
+	 * @param block The block being sent.
 	 */
-	void sendBlock(String fileId, FileBlock block) throws ProtocolException;
+	void sendBlock(String fileId, FileBlock block);
 	
 	/**
 	 * Get this peers Id.
