@@ -88,13 +88,14 @@ public class NetworkPeer implements IPeer {
 			io.println(Application.getPropertiesManager().getPeerId(), bindId);
 			//out.flush();
 			
-			
 			//TODO check that protocol versions are compatible
 			String versionDec = io.nextLine(bindId);
 			this.id = io.nextLine(bindId);
 			
 			//register this peer with the tracker
-			t.registerPeer(id, new InetSocketAddress(s.getInetAddress().getHostName(), s.getPort()));
+			//TODO allow the port to be variable
+			//can't use s.getPort() because the port an outgoing connection leaves on is not the same as the port they are listening on
+			t.registerPeer(id, new InetSocketAddress(s.getInetAddress().getHostName(), Reference.DEFAULT_PORT));
 			
 			io.unbind(bindId);
 			
@@ -116,12 +117,17 @@ public class NetworkPeer implements IPeer {
 			while (!s.isClosed()) {
 				String request = io.nextLine(null);
 				
+				System.out.println(request);
+				
 				StringTokenizer tokens = new StringTokenizer(request);
 				
 				switch (tokens.nextToken())  {
 					//someone is trying to fetch a block
 					case "fetch":
 						fetch(tokens.nextToken());
+						break;
+					case "send":
+						receiveBlock(tokens.nextToken());
 						break;
 					case "known-peers":
 						knownPeers();
@@ -142,6 +148,27 @@ public class NetworkPeer implements IPeer {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	/**
+	 * Recieve a pushed block from another peer.
+	 * @param fileBlockId The id of the file block bein retriveed (i.e. <file id>:<block index>)
+	 */
+	private void receiveBlock(String fileBlockId) {
+		String bindId = io.bind();
+		
+		String[] id = fileBlockId.split(":");
+		
+		try {
+			FileBlock block = readBlock(Integer.parseInt(id[1]), bindId);
+			
+			fm.registerBlock(id[0], block);
+		} catch (ArrayIndexOutOfBoundsException | NumberFormatException | ProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		io.unbind(bindId);
 	}
 	
 	/**
@@ -297,13 +324,15 @@ public class NetworkPeer implements IPeer {
 	public synchronized FileBlock requestBlock(String fileId, int index) throws ProtocolException {
 		try {
 			String bindId = io.bind();
-			String request = fileId + ":" + index;
+			String request = "fetch " + fileId + ":" + index;
 			
 			io.println(request, bindId);
 			
-			//out.flush();
+			FileBlock block = readBlock(index, bindId);
 			
-			return readResponse(index, bindId);
+			io.unbind(bindId);
+			
+			return block;
 		} catch (IndexOutOfBoundsException | NumberFormatException e) {
 			throw new ProtocolException("Error retrieving block from peer " + id);
 		}
@@ -314,13 +343,11 @@ public class NetworkPeer implements IPeer {
 	 * @return The required block.
 	 * @throws ProtocolException 
 	 */
-	private synchronized FileBlock readResponse(int index, String bindId) throws ProtocolException {
+	private synchronized FileBlock readBlock(int index, String bindId) throws ProtocolException {
 		try {
 			//read in the content of the block
 			String content64 = io.nextLine(bindId);
 			byte[] content = Base64.getDecoder().decode(content64);
-			
-			io.unbind(bindId);
 			
 			//return the relevant block
 			return new EncryptedFileBlock(id, content, index, null);
@@ -331,19 +358,24 @@ public class NetworkPeer implements IPeer {
 
 
 	@Override
-	public synchronized void sendBlock(String fileId, FileBlock block) {
-		// TODO Auto-generated method stub
-		
+	public synchronized void sendBlock(String fileId, FileBlock block) throws ProtocolException {
+		try {
+			String bindId = io.bind();
+			
+			//tell the remote peer which block it's about to recieve
+			io.println("send " + fileId + ":" + block.getIndex(), bindId);
+			
+			//send the block content
+			io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
+			
+			io.unbind(bindId);
+		} catch (IndexOutOfBoundsException | NumberFormatException e) {
+			throw new ProtocolException("Error retrieving block from peer " + id);
+		}
 	}
 
 	@Override
 	public String getId() {
 		return id;
-	}
-
-	@Override
-	public List<PeerInfo> getKnownPeers() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

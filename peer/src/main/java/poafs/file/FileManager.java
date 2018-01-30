@@ -104,4 +104,28 @@ public class FileManager {
 		return availableFiles;
 	}
 
+	/**
+	 * Register a new file block with this file manager.
+	 * @param fileId The id of the file.
+	 * @param block The block being registered.
+	 */
+	public void registerBlock(String fileId, FileBlock block) {
+		if (availableFiles.containsKey(fileId)) {
+			availableFiles.get(fileId).addBlock(block);
+		} else {
+			//create a new file and 
+			PoafsFile file = new PoafsFile(fileId);
+			file.addBlock(block);
+			
+			availableFiles.put(fileId, file);
+		}
+		
+		//save the file to disk
+		try {
+			availableFiles.get(fileId).saveFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

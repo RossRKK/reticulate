@@ -30,14 +30,16 @@ public interface IPeer extends Runnable {
 	 * @return The peer's id.
 	 */
 	String getId();
-	
-	/**
-	 * Get a list of all the peers this peer knows about.
-	 * @return A list of peer info objects.
-	 */
-	public List<PeerInfo> getKnownPeers() throws ProtocolException;
 
+	/**
+	 * Get a set of available file blocks that this peer can serve.
+	 * @return A map of ID and list of available block indicies
+	 */
 	public Map<String, List<Integer>> requestAvailableFiles();
 
+	/**
+	 * Get a set of known peers that this peer knows about.
+	 * @return A set of known peers.
+	 */
 	public Set<PeerInfo> requestKnownPeers();
 }
