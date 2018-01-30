@@ -192,14 +192,8 @@ public class NetworkPeer implements IPeer {
 		io.println("length " + peers.size(), bindId);
 		
 		for (Entry<String, PeerInfo> entry:peers.entrySet()) {
-			
-			//ignore this peer we're clearly already connected and it doesn't really know what its own address is
-			//and our address might be weird aswell
-			if (!(entry.getKey().equals(this.id) || entry.getKey().equals(Application.getPropertiesManager().getPeerId()))) {
-				
-				//output the id and address of the peer as "<peer id> <host name>:<port>"
-				io.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort(), bindId);
-			}
+			//output the id and address of the peer as "<peer id> <host name>:<port>"
+			io.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort(), bindId);
 		}
 		
 		io.unbind(bindId);
