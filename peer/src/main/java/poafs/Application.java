@@ -64,7 +64,6 @@ public class Application {
 		boolean exit = false;
 		
 		while (!exit) {
-			System.out.print("> ");
 			String command = sc.nextLine();
 			switch (command) {
 				case "ls":
