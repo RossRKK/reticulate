@@ -1,12 +1,5 @@
 package poafs.cryto;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
 import poafs.exception.KeyException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;

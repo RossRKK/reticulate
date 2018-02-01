@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.Scanner;
 
-import poafs.file.tracking.FileInfo;
 import poafs.lib.Reference;
 
 public class FileManager {
@@ -23,7 +21,12 @@ public class FileManager {
 	 * @return The relevant file block.
 	 */
 	public FileBlock getFileBlock(String fileId, int index) {
-		return getFile(fileId).getBlocks().get(index);
+		PoafsFile file = getFile(fileId);
+		if (file != null) {
+			return file.getBlocks().get(index);
+		} else {
+			return null;
+		}
 	}
 	
 	/**

@@ -1,6 +1,7 @@
 package poafs.cryto;
 
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -8,8 +9,11 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
@@ -151,6 +155,24 @@ public class KeyStore implements IEncrypter, IDecrypter {
 		} catch (Exception e) {
 			throw new KeyException();
 		}
+	}
+	
+	public byte[] rewrapKey(byte[] recipientPublicKey, byte[] wrappedKey) throws KeyException {
+		PublicKey pub;
+		try {
+			pub = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(recipientPublicKey));
+			SecretKey key = unwrapKey(wrappedKey);
+			
+			rsa.init(Cipher.WRAP_MODE, pub);
+			
+			return rsa.wrap(key);
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException e) {
+			throw new KeyException();
+		}
+	}
+
+	public PublicKey getPublicKey() {
+		return publicKey;
 	}
 
 }

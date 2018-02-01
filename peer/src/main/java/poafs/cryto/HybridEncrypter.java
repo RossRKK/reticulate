@@ -4,9 +4,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
@@ -16,7 +14,6 @@ import poafs.exception.KeyException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
 import poafs.lib.Reference;
-import poafs.local.PropertiesManager;
 
 public class HybridEncrypter implements IEncrypter {
 	/**

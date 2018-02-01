@@ -7,19 +7,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import javax.swing.SwingUtilities;
-
+import org.bouncycastle.util.encoders.Base64;
 import org.web3j.crypto.CipherException;
 
 import poafs.adapter.WebServer;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
+import poafs.file.FileMeta;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.PeerInfo;
-import poafs.gui.video.VideoPlayer;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
-import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 
 public class Application {
 	
@@ -41,7 +39,11 @@ public class Application {
 	
 	public static void main(String[] args) throws IOException, ProtocolException, KeyException {
 		try {
-			pm.loadProperties(args[0]);
+			if (args.length > 0) {
+				pm.loadProperties(args[0]);
+			} else {
+				pm.loadProperties(Reference.CONFIG_PATH);
+			}
 			
 			net = new Network(pm.getWalletPath(), pm.getWalletPass());
 			
@@ -102,6 +104,30 @@ public class Application {
 						e.printStackTrace();
 					}
 					break;
+				case "share":
+					shareFile(sc.nextLine(), sc.nextLine(), sc.nextLine(), Integer.parseInt(sc.nextLine()));
+					System.out.println("Complete.");
+					break;
+				case "revoke-share":
+					net.revokeShare(sc.nextLine(), sc.nextLine());
+					System.out.println("Complete.");
+					break;
+				case "get-access":
+					System.out.println(net.getAccessLevel(sc.nextLine(), sc.nextLine()));
+					break;
+				case "modify-access":
+					net.modifyAccessLevel(sc.nextLine(), sc.nextLine(), Integer.parseInt(sc.nextLine()));
+					System.out.println("Complete.");
+					break;
+				case "file-info":
+					fileInfo(sc.nextLine());
+					break;
+				case "address":
+					System.out.println(net.getCreds().getAddress());
+					break;
+				case "public-key":
+					System.out.println(Base64.encode(net.getKeyStore().getPublicKey().getEncoded()));
+					break;
 				case "exit":
 				case "quit":
 					exit = true;
@@ -109,13 +135,23 @@ public class Application {
 				default:
 					System.out.println("Unrecognised Command");
 				case "help":
-					System.out.println("\nAvailable commands: ");
+					System.out.println("Available commands: ");
+					System.out.println("address\t\tprint the address of the current user");
+					System.out.println("public-key\tprint the public key of the current user (base 64)");
+					System.out.println();
 					System.out.println("list-files\tlist all files that this peer can access on the network");
 					System.out.println("list-peers\tlist all peers that this peer can see");
+					System.out.println("file-info\tget the meta data for a file, file id");
+					System.out.println();
 					System.out.println("load\t\tload a file from the network, the next line should be the if of the file you want to load");
 					System.out.println("save\t\tload a file from the network and save it to the path \"file\", the next line should be the if of the file you want to load");
 					System.out.println("register-file\tregister a file on the network, the next lines should be the path to the file, then the name the file should have on the network");
 					System.out.println("upload\t\tupload a registered file to other peers on the network, the next line should be the id of a file that is available locally");
+					System.out.println();
+					System.out.println("share\t\tshare a file with another user, fileId, recipient address, recipient public key (base 64), access level");
+					System.out.println("revoke-share\trevoke a share a file with another user, file id, recipient address");
+					System.out.println("get-access\tget a user's access level for a file, fileId, user address");
+					System.out.println("modify-access\tmodify a user's access level for a file, fileId, user address, new access level");
 			}
 			
 		}
@@ -200,6 +236,23 @@ public class Application {
 			System.out.println(f.getFileId());
 		}
 		System.out.println("End");
+	}
+	
+	private static void shareFile(String fileId, String recipientAddress, String recipientPublicKey, int accessLevel) {
+		
+		byte[] publicKey = Base64.decode(recipientPublicKey);
+		
+		try {
+			net.share(fileId, recipientAddress, publicKey, accessLevel);
+		} catch (KeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private static void fileInfo(String fileId) {
+		FileMeta meta = net.getInfoForFile(fileId);
+		System.out.println(meta.getId() + " \"" + meta.getFileName() + "\" " + meta.getLength());
 	}
 	
 	public static PropertiesManager getPropertiesManager() {

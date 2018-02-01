@@ -7,7 +7,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
@@ -35,6 +38,7 @@ import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
 import poafs.file.FileManager;
+import poafs.file.FileMeta;
 import poafs.file.PoafsFile;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.ITracker;
@@ -70,13 +74,15 @@ public class Network {
 	
 	private ITracker tracker;
 	
+	private Credentials creds;
+	
 	/**
 	 * The file system manager.
 	 */
 	private FileManager fileManager = new FileManager();
 	
 	public Network(String path, String pass) throws ProtocolException, IOException, CipherException {
-		Credentials creds = WalletUtils.loadCredentials(pass, path);
+		creds = WalletUtils.loadCredentials(pass, path);
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
 		this.auth = new EthAuth(creds);
@@ -255,5 +261,79 @@ public class Network {
 	
 	public List<PeerInfo> listPeers() {
 		return tracker.getPeers().entrySet().parallelStream().map(e -> e.getValue()).collect(Collectors.toList());
+	}
+	
+	/**
+	 * Share a file with another user.
+	 * @param fileId The id of the file to share.
+	 * @param userAddress The address of the user being shared with.
+	 * @param recipientKey The recipients public key
+	 * @param accessLevel The access level they will recieve.
+	 * @return Whether the operaiton succeeded.
+	 * @throws KeyException 
+	 */
+	public boolean share(String fileId, String userAddress, byte[] publicKey, int accessLevel) throws KeyException {
+		
+		byte[] wrappedKey = keyStore.rewrapKey(publicKey, auth.getKeyForFile(fileId));
+		
+		return auth.shareFile(fileId, userAddress, wrappedKey, accessLevel);
+	}
+	
+	/**
+	 * Revoke a users share on a file.
+	 * @param fileId The id of the file.
+	 * @param userAddress The user's ethereum address.
+	 * @return Whether the opertion succeeded.
+	 */
+	public boolean revokeShare(String fileId, String userAddress) {
+		return auth.revokeShare(fileId, userAddress);
+	}
+	
+	/**
+	 * Get a user's access level to a file.
+	 * @param fileId The id of the file.
+	 * @param userAddress The address of the user.
+	 * @return The access level the user has on the file.
+	 */
+	public int getAccessLevel(String fileId, String userAddress) {
+		return auth.getAccessLevel(fileId, userAddress);
+	}
+	
+	/**
+	 * Modify the access level a user has.
+	 * @param fileId The id of the file they use.
+	 * @param userAddress The address of the user.
+	 * @param accessLevel The new access level.
+	 * @return Whether the operation succeeded.
+	 */
+	public boolean modifyAccessLevel(String fileId, String userAddress, int accessLevel) {
+		return auth.modifyAccessLevel(fileId, userAddress, accessLevel);
+	}
+	
+	/**
+	 * Get the meta data for a file.
+	 * @param fileId The id of the file.
+	 * @return The files meta data.
+	 */
+	public FileMeta getInfoForFile(String fileId) {
+		return auth.getInfoForFile(fileId);
+	}
+	
+	/**
+	 * Remove a file from the network.
+	 * @param fileId The id of the file to remove.
+	 * @return Whether the operation succeeded.
+	 */
+	public boolean removeFile(String fileId) {
+		//TODO tell peers with a copy  of the file that they can delete it.
+		return auth.removeFile(fileId);
+	}
+
+	public KeyStore getKeyStore() {
+		return keyStore;
+	}
+
+	public Credentials getCreds() {
+		return creds;
 	}
 }

@@ -1,7 +1,5 @@
 package poafs.file;
 
-import java.util.Base64;
-
 public class EncryptedFileBlock extends FileBlock {
 	
 	public EncryptedFileBlock(String originPeerId, byte[] content, int index, byte[] wrappedKey) {

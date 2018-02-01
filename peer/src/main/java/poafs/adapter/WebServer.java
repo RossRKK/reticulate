@@ -39,8 +39,7 @@ public class WebServer implements Runnable {
 			}
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Web server failed to start");
 		}
 
 	}

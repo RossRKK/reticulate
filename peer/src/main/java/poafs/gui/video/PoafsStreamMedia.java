@@ -3,7 +3,6 @@ package poafs.gui.video;
 import java.io.IOException;
 import java.io.InputStream;
 
-import poafs.PoafsFileStream;
 import uk.co.caprica.vlcj.player.media.callback.nonseekable.NonSeekableInputStreamMedia;
 
 public class PoafsStreamMedia extends NonSeekableInputStreamMedia {
