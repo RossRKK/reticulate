@@ -105,7 +105,7 @@ public class NetworkPeer implements IPeer {
 			while (!s.isClosed()) {
 				String request = io.nextLine(null);
 				
-				System.out.println(request);
+				System.out.println(id + ": " + request);
 				
 				StringTokenizer tokens = new StringTokenizer(request);
 				
@@ -251,14 +251,15 @@ public class NetworkPeer implements IPeer {
 		
 		for (Entry<String, PoafsFile> entry:files.entrySet()) {
 			//output the id and address of the peer as "<peer id> <host name>:<port>"
-			io.println(entry.getKey() + " ", bindId);
+			io.print(entry.getKey() + " ", bindId);
 			
 			//print the block indcies that the local peer has a copy of
 			for (Entry<Integer, FileBlock> block:entry.getValue().getBlocks().entrySet()) {
 				io.print(block.getKey() + ",", bindId);
 			}
 			
-			//out.flush();
+			//print a new line
+			io.println("", bindId);
 		}
 		
 		io.unbind(bindId);
@@ -267,39 +268,47 @@ public class NetworkPeer implements IPeer {
 	/**
 	 * Request which files are available from the remote peer.
 	 * @return A map containing available file ids and block indicies.
+	 * @throws ProtocolException 
 	 */
 	@Override
-	public synchronized Map<String, List<Integer>> requestAvailableFiles() {
-		String bindId = io.bind();
-		
-		Map<String, List<Integer>> files = new HashMap<String, List<Integer>>();
-		
-		io.println("available-files", bindId);
-		//out.flush();
-		
-		String[] lengthLine = io.nextLine(bindId).split(" ");
-		int length = Integer.parseInt(lengthLine[1]);
-		
-		//read each line that has peer info on it
-		for (int i = 0; i < length; i++) {
-			String[] line = io.nextLine(bindId).split(" ");
+	public synchronized Map<String, List<Integer>> requestAvailableFiles() throws ProtocolException {
+		try {
+			String bindId = io.bind();
 			
+			Map<String, List<Integer>> files = new HashMap<String, List<Integer>>();
 			
-			String id = line[0];
-			StringTokenizer tokens = new StringTokenizer(line[1], ",");
+			io.println("available-files", bindId);
+			//out.flush();
 			
-			//parse all of the indicies
-			List<Integer> indicies = new ArrayList<Integer>();
-			while (tokens.hasMoreTokens()) {
-				indicies.add(Integer.parseInt(tokens.nextToken()));
+			String[] lengthLine = io.nextLine(bindId).split(" ");
+			int length = Integer.parseInt(lengthLine[1]);
+			
+			//read each line that has peer info on it
+			for (int i = 0; i < length; i++) {
+				String[] line = io.nextLine(bindId).split(" ");
+				
+				String id = line[0];
+				
+				//there might be no available blocks?
+				if (line.length > 1) {
+					StringTokenizer tokens = new StringTokenizer(line[1], ",");
+					
+					//parse all of the indicies
+					List<Integer> indicies = new ArrayList<Integer>();
+					while (tokens.hasMoreTokens()) {
+						indicies.add(Integer.parseInt(tokens.nextToken()));
+					}
+					
+					files.put(id, indicies);
+				}
 			}
 			
-			files.put(id, indicies);
+			io.unbind(bindId);
+			
+			return files;
+		} catch (IndexOutOfBoundsException e) {
+			throw new ProtocolException("Error requesting available files from: " + id);
 		}
-		
-		io.unbind(bindId);
-		
-		return files;
 	}
 
 	/**

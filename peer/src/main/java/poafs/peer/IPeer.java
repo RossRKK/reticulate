@@ -34,8 +34,9 @@ public interface IPeer extends Runnable {
 	/**
 	 * Get a set of available file blocks that this peer can serve.
 	 * @return A map of ID and list of available block indicies
+	 * @throws ProtocolException 
 	 */
-	public Map<String, List<Integer>> requestAvailableFiles();
+	public Map<String, List<Integer>> requestAvailableFiles() throws ProtocolException;
 
 	/**
 	 * Get a set of known peers that this peer knows about.
