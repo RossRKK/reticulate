@@ -222,7 +222,7 @@ public class NetworkPeer implements IPeer {
 			//parse the details
 			String id = tokens.nextToken();
 			String host = tokens.nextToken();
-			int port =  tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : Reference.port;
+			int port =  tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : Reference.DEFAULT_PORT;
 			
 			//ignore this peer we're clearly already connected and it doesn't really know what its own address is
 			//and our address might be weird aswell

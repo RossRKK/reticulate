@@ -4,7 +4,7 @@ public class Reference {
 	/**
 	 * The default port number poafs runs on.
 	 */
-	public static int port = 5964;
+	public final static int DEFAULT_PORT = 5964;
 	
 	/**
 	 * The size that each block should be.

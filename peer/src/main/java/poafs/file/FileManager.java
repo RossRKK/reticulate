@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
+import poafs.file.tracking.FileInfo;
 import poafs.lib.Reference;
 
 public class FileManager {
@@ -89,7 +91,6 @@ public class FileManager {
 				
 				byte[] content = Base64.getDecoder().decode(content64);
 				
-				//TODO fetch the wrapped key from the ethereum network
 				EncryptedFileBlock block = new EncryptedFileBlock(originId, content, Integer.parseInt(blockFilePath), null);
 				
 				sc.close();
@@ -108,9 +109,45 @@ public class FileManager {
 		availableFiles.put(file.getId(), file);
 	}
 
+	/**
+	 * Get the files availabel to this peer.
+	 * @return The avaialble files (content may be empty)
+	 */
 	public HashMap<String, PoafsFile> getAvailableFiles() {
-		//TODO add the availble files on the disk without loading them
-		return availableFiles;
+		//create a hasmap
+		HashMap<String, PoafsFile> available = new HashMap<String, PoafsFile>();
+		
+		File folder = new File(Reference.FILE_PATH);
+		
+		String[] availableFileIds = folder.list();
+		
+		for (String fileId:availableFileIds) {
+			try {
+				File holdingFolder = new File(Reference.FILE_PATH + File.separator + fileId);
+				
+				if (holdingFolder.exists()) {
+					PoafsFile file = new PoafsFile(fileId);
+				
+					for (String blockFilePath:holdingFolder.list()) {				
+						Scanner sc = new Scanner(new FileInputStream(holdingFolder.getPath() + File.separator + blockFilePath));
+						
+						String originId = sc.nextLine();
+						
+						EncryptedFileBlock block = new EncryptedFileBlock(originId, null, Integer.parseInt(blockFilePath), null);
+						
+						sc.close();
+						file.addBlock(block);
+					}
+					
+					available.put(fileId, file);
+				}
+			} catch (IOException e) {
+				System.err.println("Error loading file: " + fileId);
+				e.printStackTrace();
+			}
+		}
+		
+		return available;
 	}
 
 	/**

@@ -40,19 +40,15 @@ public class Application {
 	private static PropertiesManager pm = new PropertiesManager();
 	
 	public static void main(String[] args) throws IOException, ProtocolException, KeyException {
-		if (args.length > 1) {
-			Reference.port = Integer.parseInt(args[1]);
-		}
-		
 		try {
 			pm.loadProperties(args[0]);
 			
 			net = new Network(pm.getWalletPath(), pm.getWalletPass());
 			
-			//new Thread(new WebServer(8080, net)).start();
+			new Thread(new WebServer(8080, net)).start();
 			
 			//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
-			new NativeDiscovery().discover();
+			//new NativeDiscovery().discover();
 	        
 			ui();
 		} catch (ProtocolException | CipherException e) {
@@ -90,7 +86,7 @@ public class Application {
 						e.printStackTrace();
 					}
 					break;
-				case "play":
+				/*case "play":
 					PoafsFileStream stream = net.fetchFile(sc.nextLine());
 					SwingUtilities.invokeLater(new Runnable() {
 			            @Override
@@ -98,7 +94,7 @@ public class Application {
 			                new VideoPlayer(stream);
 			            }
 			        });
-					break;
+					break;*/
 				case "upload":
 					try {
 						net.uploadFile(sc.nextLine());
@@ -112,6 +108,14 @@ public class Application {
 					break;
 				default:
 					System.out.println("Unrecognised Command");
+				case "help":
+					System.out.println("\nAvailable commands: ");
+					System.out.println("list-files\tlist all files that this peer can access on the network");
+					System.out.println("list-peers\tlist all peers that this peer can see");
+					System.out.println("load\t\tload a file from the network, the next line should be the if of the file you want to load");
+					System.out.println("save\t\tload a file from the network and save it to the path \"file\", the next line should be the if of the file you want to load");
+					System.out.println("register-file\tregister a file on the network, the next lines should be the path to the file, then the name the file should have on the network");
+					System.out.println("upload\t\tupload a registered file to other peers on the network, the next line should be the id of a file that is available locally");
 			}
 			
 		}
