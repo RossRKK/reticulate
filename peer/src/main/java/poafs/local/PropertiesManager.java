@@ -63,20 +63,10 @@ public class PropertiesManager {
 
 			// get the property value and print it out
 			peerId = prop.getProperty("peerId");
-
-			System.out.println("Peer ID: " + peerId);
 			
 			knownPeerId = prop.getProperty("knownPeerId");
-			
-			System.out.println("Known Peer ID: " + knownPeerId);
-			
 			knownPeerAddress = prop.getProperty("knownPeerAddress");
-			
-			System.out.println("Known Peer Address: " + knownPeerAddress);
-			
 			knownPeerPort = Integer.parseInt(prop.getProperty("knownPeerPort"));
-			
-			System.out.println("Known Peer Port: " + knownPeerPort);
 			
 			walletPath = prop.getProperty("walletPath");
 			walletPass = prop.getProperty("walletPass");
@@ -93,7 +83,15 @@ public class PropertiesManager {
 					e.printStackTrace();
 				}
 			}
+			
+			printProperties();
 		}
+	}
+	
+	private void printProperties() {
+		System.out.println("Peer ID: " + peerId);
+		System.out.println("Known Peer ID: " + knownPeerId);
+		System.out.println("Known Peer Address: " + knownPeerAddress + ":" + knownPeerPort);
 	}
 	
 	/**
@@ -106,8 +104,24 @@ public class PropertiesManager {
 			output = new FileOutputStream(Reference.CONFIG_PATH);
 
 			// set the properties value
-			prop.setProperty("peerId", UUID.randomUUID().toString());
+			peerId = UUID.randomUUID().toString();
+			prop.setProperty("peerId", peerId);
+			
+			knownPeerId = "noodles";
+			prop.setProperty("knownPeerId", knownPeerId);
+			
+			knownPeerAddress = "noodlesfor.one";
+			prop.setProperty("knownPeerAddress", knownPeerAddress);
+			
+			knownPeerPort = Reference.DEFAULT_PORT;
+			prop.setProperty("knownPeerPort", "" + knownPeerPort);
 
+			walletPath = "wallet.json";
+			prop.setProperty("walletPath", "" + walletPath);
+			
+			walletPass = "password";
+			prop.setProperty("walletPass", walletPass);
+			
 			// save properties to project root folder
 			prop.store(output, null);
 
