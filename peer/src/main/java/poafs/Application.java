@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import org.bouncycastle.util.encoders.Base64;
+import java.util.Base64;
 import org.web3j.crypto.CipherException;
 
 import poafs.adapter.WebServer;
@@ -126,7 +126,7 @@ public class Application {
 					System.out.println(net.getCreds().getAddress());
 					break;
 				case "public-key":
-					System.out.println(Base64.encode(net.getKeyStore().getPublicKey().getEncoded()));
+					System.out.println(Base64.getEncoder().encodeToString(net.getKeyStore().getPublicKey().getEncoded()));
 					break;
 				case "exit":
 				case "quit":
@@ -240,7 +240,7 @@ public class Application {
 	
 	private static void shareFile(String fileId, String recipientAddress, String recipientPublicKey, int accessLevel) {
 		
-		byte[] publicKey = Base64.decode(recipientPublicKey);
+		byte[] publicKey = Base64.getDecoder().decode(recipientPublicKey);
 		
 		try {
 			net.share(fileId, recipientAddress, publicKey, accessLevel);
