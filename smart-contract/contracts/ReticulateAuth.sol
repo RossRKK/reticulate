@@ -18,6 +18,8 @@ contract ReticulateAuth {
         uint length;
         //the encrypted keys for each user with access
         mapping(address => Permission) permissions;
+        //the sha256 checksums for specified blocks (optional)
+        mapping(uint => bytes) checkSums;
     }
 
     //represents a users Permission on a file
@@ -93,6 +95,41 @@ contract ReticulateAuth {
         if (file.permissions[msg.sender].level >= ADMIN
             && file.permissions[msg.sender].level >= level) {
             file.permissions[user].level = level;
+        }
+    }
+
+    ///add the checkSum for a specific block in a file
+    function addCheckSum(string fileId, uint blockIndex, bytes checkSum) public {
+        File storage file = files[fileId];
+        //only allow the checksum to be set once
+        //only allow the checksum to be set by an admin
+        if (file.checkSums[blockIndex].length == 0 && file.permissions[msg.sender].level >= ADMIN) {
+            //set the checksum
+            file.checkSums[blockIndex] = checkSum;
+        }
+    }
+
+    //get the checksum for a specified block in a file
+    function getCheckSum(string fileId, uint blockIndex) public view returns (bytes) {
+        return files[fileId].checkSums[blockIndex];
+    }
+
+    //compare a provided checkSum to the recorded checksum
+    function compareCheckSum(string fileId, uint blockIndex, bytes checkSum) public view returns (bool) {
+        bytes storage actual = files[fileId].checkSums[blockIndex];
+        if (checkSum.length == actual.length) {
+            //check every byte
+            for (uint i = 0; i < actual.length; i++) {
+                //if any byte is wrong return false
+                if (actual[i] != checkSum[i]) {
+                    return false;
+                }
+            }
+            //all bytes matched so return true
+            return true;
+        } else {
+            //length mismatch
+            return false;
         }
     }
 

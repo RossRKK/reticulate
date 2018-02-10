@@ -136,11 +136,6 @@ public class Network {
 	 * @throws InvalidKeyException 
 	 */
 	public void registerFile(String path, String fileName) throws IOException, ProtocolException, KeyException, NoSuchAlgorithmException {
-		String id = UUID.randomUUID().toString();
-		System.out.println(id);
-
-		SecretKey key = buildAESKey();
-		
 		//read in the file
 		File orig = new File(path);
 		int numOfBytes = (int) orig.length();
@@ -149,6 +144,25 @@ public class Network {
 		inFile.read(bytes);
 		inFile.close();
 		System.out.println("File read");
+		
+		registerFile(bytes, fileName);
+	}
+	
+	/**
+	 * REgister a file eith the network
+	 * @param bytes The contents of the file.
+	 * @param fileName The name of the file.
+	 * @throws NoSuchAlgorithmException
+	 * @throws ProtocolException
+	 * @throws KeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
+	public String registerFile(byte[] bytes, String fileName) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException {
+		String id = UUID.randomUUID().toString();
+		System.out.println(id);
+		
+		SecretKey key = buildAESKey();
 		
 		int noBlocks = (int) Math.ceil((double)bytes.length / Reference.BLOCK_SIZE);
 		
@@ -177,6 +191,8 @@ public class Network {
 		
 		auth.registerFile(file, fileName, noBlocks, ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
 		System.out.println("Registered");
+		
+		return id;
 	}
 
 	/**

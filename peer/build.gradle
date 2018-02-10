@@ -27,5 +27,9 @@ dependencies {
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     
+    //web3j used to interface with the ethereum network
     compile ('org.web3j:core:3.2.0')
+    
+    //spark used for the web server
+    compile "com.sparkjava:spark-core:2.7.1"
 }
