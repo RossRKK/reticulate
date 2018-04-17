@@ -84,7 +84,7 @@ public class Application {
 					break;
 				case "register-file":
 					try {
-						net.registerFile(sc.nextLine(), sc.nextLine());
+						net.registerFile(sc.nextLine());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -252,8 +252,8 @@ public class Application {
 	}
 	
 	private static void fileInfo(String fileId) {
-		FileMeta meta = net.getInfoForFile(fileId);
-		System.out.println(meta.getId() + " \"" + meta.getFileName() + "\" " + meta.getLength());
+		int length = net.getLengthOfFile(fileId);
+		System.out.println(fileId + " " + length);
 	}
 	
 	public static PropertiesManager getPropertiesManager() {

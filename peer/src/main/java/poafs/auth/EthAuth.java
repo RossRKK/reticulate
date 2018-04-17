@@ -52,14 +52,12 @@ public class EthAuth implements IAuthenticator {
 	 * @return The files meta data
 	 */
 	@Override
-	public FileMeta getInfoForFile(String fileId) {
+	public int getFileLength(String fileId) {
 		try {
-			Tuple2<String, BigInteger> meta = contract.getFileMeta(fileId).send();
-			
-			return new FileMeta(fileId, meta.getValue1(), meta.getValue2().intValueExact());
+			return contract.getFileLength(fileId).send().intValue();
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			return -1;
 		}
 	}
 
@@ -71,9 +69,9 @@ public class EthAuth implements IAuthenticator {
 	 * @return Whether the action was successful.
 	 */
 	@Override
-	public boolean registerFile(PoafsFile file, String fileName, int length, byte[] wrappedKey) {
+	public boolean registerFile(PoafsFile file, int length, byte[] wrappedKey) {
 		try {
-			contract.addFile(file.getId(), fileName, wrappedKey, BigInteger.valueOf(length)).send();
+			contract.addFile(file.getId(), wrappedKey, BigInteger.valueOf(length)).send();
 			
 			return true;
 		} catch (Exception e) {
@@ -165,6 +163,48 @@ public class EthAuth implements IAuthenticator {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	@Override
+	public boolean updateFileLength(String fileId, int newLength) {
+		try {
+			contract.updateFileLength(fileId, BigInteger.valueOf(newLength)).send();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	@Override
+	public boolean updateCheckSum(String fileId, int blockIndex, byte[] checkSum) {
+		try {
+			contract.updateCheckSum(fileId, BigInteger.valueOf(blockIndex), checkSum).send();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	@Override
+	public boolean compareCheckSum(String fileId, int blockIndex, byte[] checkSum) {
+		try {
+			return contract.compareCheckSum(fileId, BigInteger.valueOf(blockIndex), checkSum).send();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	@Override
+	public byte[] getCheckSum(String fileId, int blockIndex) {
+		try {
+			return contract.getCheckSum(fileId, BigInteger.valueOf(blockIndex)).send();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 }

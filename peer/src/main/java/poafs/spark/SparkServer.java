@@ -81,7 +81,7 @@ public class SparkServer {
 	 */
 	private Route addFile = (req, res) -> {
 		//register the file with the network
-		return net.registerFile(req.bodyAsBytes(), req.queryParams("name"));
+		return net.registerFile(req.bodyAsBytes());
 	};
 	
 	/**

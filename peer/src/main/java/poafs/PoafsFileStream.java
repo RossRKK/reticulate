@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Random;
@@ -89,7 +91,6 @@ public class PoafsFileStream extends InputStream {
 	
 	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker, FileManager fm) {
 		this.auth = auth;
-		info = auth.getInfoForFile(fileId);
 		this.fileId = fileId;
 		this.preloadDistance = Math.min(preloadDistance, info.getLength());
 		
@@ -253,15 +254,27 @@ class  BlockFetcher implements Runnable {
 			((EncryptedFileBlock)block).setWrappedKey(auth.getKeyForFile(fileId));
 			
 			try {
-				long time = System.currentTimeMillis() - startTime;
+				MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+		        crypt.reset();
+		        crypt.update(block.getContent());
 				
-				FileBlock out = d.decrypt((EncryptedFileBlock)block);
-				
-				System.out.println("Decrypt for " + fileId + ":" + index + " took " + 
-						time + "ms " + ((double)time)/out.getContent().length + "B/ms");
-				
-				return out;
-			} catch (KeyException e) {
+		        //check if the checksum is correct
+				if (auth.compareCheckSum(fileId, block.getIndex(), crypt.digest())) {
+					
+					long time = System.currentTimeMillis() - startTime;
+					
+					FileBlock out = d.decrypt((EncryptedFileBlock)block);
+					
+					System.out.println("Decrypt for " + fileId + ":" + index + " took " + 
+							time + "ms " + ((double)time)/out.getContent().length + "B/ms");
+					
+					return out;
+				} else {
+					//TODO handle the error
+					System.out.println("Invalid checksum for block " + fileId + ":" + index);
+					return null;
+				}
+			} catch (KeyException | NoSuchAlgorithmException e) {
 				System.out.println("Error decrypting " + fileId + ":" + index);
 				System.out.println(block.getContent().length);
 				e.printStackTrace();

@@ -1,6 +1,5 @@
 package poafs.auth;
 
-import poafs.file.FileMeta;
 import poafs.file.PoafsFile;
 
 /**
@@ -16,7 +15,7 @@ public interface IAuthenticator {
 	 */
 	public byte[] getKeyForFile(String fileId);
 	
-	public FileMeta getInfoForFile(String fileId);
+	public int getFileLength(String fileId);
 
 	public int getAccessLevel(String fileId, String user);
 
@@ -28,5 +27,13 @@ public interface IAuthenticator {
 
 	public boolean modifyAccessLevel(String fileId, String user, int accessLevel);
 
-	public boolean registerFile(PoafsFile file, String fileName, int length, byte[] wrappedKey);
+	public boolean registerFile(PoafsFile file, int length, byte[] wrappedKey);
+	
+	public boolean updateFileLength(String fileId, int newLength);
+	
+	public boolean updateCheckSum(String fileId, int blockIndex, byte[] checkSum);
+	
+	public boolean compareCheckSum(String fileId, int blockIndex, byte[] checkSum);
+	
+	public byte[] getCheckSum(String fileId, int blockIndex);
 }

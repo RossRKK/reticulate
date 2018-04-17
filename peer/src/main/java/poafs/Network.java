@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
@@ -135,7 +136,7 @@ public class Network {
 	 * @throws NoSuchAlgorithmException 
 	 * @throws InvalidKeyException 
 	 */
-	public void registerFile(String path, String fileName) throws IOException, ProtocolException, KeyException, NoSuchAlgorithmException {
+	public void registerFile(String path) throws IOException, ProtocolException, KeyException, NoSuchAlgorithmException {
 		//read in the file
 		File orig = new File(path);
 		int numOfBytes = (int) orig.length();
@@ -145,7 +146,7 @@ public class Network {
 		inFile.close();
 		System.out.println("File read");
 		
-		registerFile(bytes, fileName);
+		registerFile(bytes);
 	}
 	
 	/**
@@ -158,7 +159,7 @@ public class Network {
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public String registerFile(byte[] bytes, String fileName) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException {
+	public String registerFile(byte[] bytes) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException {
 		String id = UUID.randomUUID().toString();
 		System.out.println(id);
 		
@@ -182,6 +183,12 @@ public class Network {
 			file.addBlock(encrypted);
 			
 			tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), id, i);
+			
+			//register the blocks checksum
+			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+	        crypt.reset();
+	        crypt.update(encrypted.getContent());
+			auth.updateCheckSum(id, i, crypt.digest());
 		}
 		
 		System.out.println("Encrypted");
@@ -189,7 +196,7 @@ public class Network {
 		fileManager.registerFile(file);
 		file.saveFile();
 		
-		auth.registerFile(file, fileName, noBlocks, ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
+		auth.registerFile(file, noBlocks, ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
 		System.out.println("Registered");
 		
 		return id;
@@ -326,14 +333,6 @@ public class Network {
 		return auth.modifyAccessLevel(fileId, userAddress, accessLevel);
 	}
 	
-	/**
-	 * Get the meta data for a file.
-	 * @param fileId The id of the file.
-	 * @return The files meta data.
-	 */
-	public FileMeta getInfoForFile(String fileId) {
-		return auth.getInfoForFile(fileId);
-	}
 	
 	/**
 	 * Remove a file from the network.
@@ -351,5 +350,9 @@ public class Network {
 
 	public Credentials getCreds() {
 		return creds;
+	}
+
+	public int getLengthOfFile(String fileId) {
+		return auth.getFileLength(fileId);
 	}
 }
