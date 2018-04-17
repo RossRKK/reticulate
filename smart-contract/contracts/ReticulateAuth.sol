@@ -9,11 +9,10 @@ contract ReticulateAuth {
 
     ///the lminimum level considered an admin
     uint private constant ADMIN = 3;
+    uint private constant WRITE = 2;
 
     //definition for a file type
     struct File {
-        //the firendly name of the file
-        string name;
         //the number of blocks in this file
         uint length;
         //the encrypted keys for each user with access
@@ -44,9 +43,9 @@ contract ReticulateAuth {
         return files[fileId].permissions[msg.sender].key;
     }
 
-    //get the name of the file
-    function getFileMeta(string fileId) public view returns(string, uint) {
-        return (files[fileId].name, files[fileId].length);
+    //get the length of the file
+    function getFileLength(string fileId) public view returns(uint) {
+        return files[fileId].length;
     }
 
     //get a users access level for a file
@@ -55,9 +54,8 @@ contract ReticulateAuth {
     }
 
     ///add a file to the contracts register
-    function addFile(string fileId, string name, bytes key, uint length) public {
+    function addFile(string fileId, bytes key, uint length) public {
         files[fileId] = File({
-            name: name,
             length: length
         });
 
@@ -98,12 +96,22 @@ contract ReticulateAuth {
         }
     }
 
-    ///add the checkSum for a specific block in a file
-    function addCheckSum(string fileId, uint blockIndex, bytes checkSum) public {
+    //increase the length of a file
+    function updateFileLength(string fileId, uint newLength) public {
         File storage file = files[fileId];
-        //only allow the checksum to be set once
-        //only allow the checksum to be set by an admin
-        if (file.checkSums[blockIndex].length == 0 && file.permissions[msg.sender].level >= ADMIN) {
+
+        if (file.permissions[msg.sender].level >= WRITE) {
+            //set the checksum
+            file.length = newLength;
+        }
+    }
+
+    ///add the checkSum for a specific block in a file
+    function updateCheckSum(string fileId, uint blockIndex, bytes checkSum) public {
+        File storage file = files[fileId];
+
+        //only allow the checksum to be set by someone with write permission
+        if (file.permissions[msg.sender].level >= WRITE) {
             //set the checksum
             file.checkSums[blockIndex] = checkSum;
         }
@@ -132,6 +140,8 @@ contract ReticulateAuth {
             return false;
         }
     }
+
+
 
     ///destroy the contract
     function destruct() public {
