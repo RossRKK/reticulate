@@ -34,6 +34,13 @@ public class PoafsFile {
 	}
 	
 	/**
+	 * Clear the contents of this file.
+	 */
+	public void clearContents() {
+		blocks.clear();
+	}
+	
+	/**
 	 * Save the file to disk.
 	 * @throws IOException 
 	 */

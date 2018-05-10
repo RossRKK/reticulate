@@ -347,7 +347,7 @@ public class NetworkPeer implements IPeer {
 			byte[] content = Base64.getDecoder().decode(content64);
 			
 			//return the relevant block
-			return new EncryptedFileBlock(id, content, index, null);
+			return new EncryptedFileBlock(content, index, null);
 		} catch (IndexOutOfBoundsException | NumberFormatException e) {
 			throw new ProtocolException("Error retrieving block from peer " + id);
 		}

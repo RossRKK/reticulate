@@ -58,7 +58,7 @@ public class HybridDecrypter implements IDecrypter{
 			
 			byte[] encryptedContent = aes.doFinal(block.getContent());
 			
-			return new FileBlock(block.getOriginPeerId(),encryptedContent, block.getIndex());
+			return new FileBlock(encryptedContent, block.getIndex());
 		} catch (Exception e) {
 			throw new KeyException();
 		}

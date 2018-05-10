@@ -32,6 +32,8 @@ public class SparkServer {
 		path("/file", () -> {
 			get("/:fileId", getFile);
 			
+			put("/:fileId", writeFile);
+			
 			delete("/:fileId", removeFile);
 			
 			post("/:fileId/share", share);
@@ -57,7 +59,7 @@ public class SparkServer {
 		HttpServletResponse raw = res.raw();
 		
 		int index = 1;
-		int currentByte = stream.read();;
+		int currentByte = stream.read();
 		while (currentByte != -1) {
 			
 			
@@ -83,6 +85,16 @@ public class SparkServer {
 		//register the file with the network
 		return net.registerFile(req.bodyAsBytes());
 	};
+	
+	/**
+	 * Handle the creation of a file.
+	 */
+	private Route writeFile = (req, res) -> {
+		//register the file with the network
+		net.updateFileContent(req.params(":fileId"), req.bodyAsBytes());
+		return "Success";
+	};
+	
 	
 	/**
 	 * Remove a file from the network.

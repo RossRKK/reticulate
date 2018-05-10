@@ -110,7 +110,7 @@ public class KeyStore implements IEncrypter, IDecrypter {
 	 * @throws NoSuchAlgorithmException 
 	 * @throws InvalidKeyException 
 	 */
-	private SecretKey unwrapKey(byte[] wrappedKey) throws KeyException {
+	public SecretKey unwrapKey(byte[] wrappedKey) throws KeyException {
 		try {
 			rsa.init(Cipher.UNWRAP_MODE, privateKey);
 			return (SecretKey)rsa.unwrap(wrappedKey, Reference.AES_CIPHER, Cipher.SECRET_KEY);
@@ -133,7 +133,7 @@ public class KeyStore implements IEncrypter, IDecrypter {
 			
 			byte[] content = aes.doFinal(block.getContent());
 			
-			return new FileBlock(block.getOriginPeerId(), content, block.getIndex());
+			return new FileBlock(content, block.getIndex());
 		} catch (Exception e) {
 			throw new KeyException();
 		}
@@ -151,7 +151,7 @@ public class KeyStore implements IEncrypter, IDecrypter {
 			rsa.init(Cipher.WRAP_MODE, publicKey);
 			byte[] wrappedKey = rsa.wrap(aesKey);
 			
-			return new EncryptedFileBlock(Application.getPropertiesManager().getPeerId(), encryptedContent, block.getIndex(), wrappedKey);
+			return new EncryptedFileBlock(encryptedContent, block.getIndex(), wrappedKey);
 		} catch (Exception e) {
 			throw new KeyException();
 		}

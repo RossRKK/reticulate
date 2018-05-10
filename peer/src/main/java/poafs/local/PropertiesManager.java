@@ -43,6 +43,8 @@ public class PropertiesManager {
 	 */
 	private String walletPass;
 	
+	private String contractAddress;
+	
 	/**
 	 * The properties object.
 	 */
@@ -52,7 +54,8 @@ public class PropertiesManager {
 	 * Load this peers properties from the properties file.
 	 * @throws FileNotFoundException 
 	 */
-	public void loadProperties(String path) {
+	public boolean loadProperties(String path) {
+		boolean success = false;
 		InputStream input = null;
 		try {
 
@@ -70,10 +73,15 @@ public class PropertiesManager {
 			
 			walletPath = prop.getProperty("walletPath");
 			walletPass = prop.getProperty("walletPass");
+			contractAddress = prop.getProperty("contractAddress");
+			
+			success = true;
 			
 		} catch (FileNotFoundException e) { 
+			System.err.println("Config File Not Found");
 			setDefaultProperties();
 		} catch (IOException ex) {
+			System.err.println("Failed to Read Config File");
 			ex.printStackTrace();
 		} finally {
 			if (input != null) {
@@ -86,6 +94,8 @@ public class PropertiesManager {
 			
 			printProperties();
 		}
+		
+		return success;
 	}
 	
 	private void printProperties() {
@@ -119,8 +129,11 @@ public class PropertiesManager {
 			walletPath = "wallet.json";
 			prop.setProperty("walletPath", "" + walletPath);
 			
-			walletPass = "password";
+			walletPass = "<wallet file password>";
 			prop.setProperty("walletPass", walletPass);
+			
+			contractAddress = "<contract addrewss>";
+			prop.setProperty("contractAddress", contractAddress);
 			
 			// save properties to project root folder
 			prop.store(output, null);
@@ -164,5 +177,9 @@ public class PropertiesManager {
 
 	public String getWalletPass() {
 		return walletPass;
+	}
+
+	public String getContractAddress() {
+		return contractAddress;
 	}
 }

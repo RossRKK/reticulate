@@ -2,8 +2,8 @@ package poafs.file;
 
 public class EncryptedFileBlock extends FileBlock {
 	
-	public EncryptedFileBlock(String originPeerId, byte[] content, int index, byte[] wrappedKey) {
-		super(originPeerId, content, index);
+	public EncryptedFileBlock(byte[] content, int index, byte[] wrappedKey) {
+		super(content, index);
 		this.wrappedKey = wrappedKey;
 	}
 	

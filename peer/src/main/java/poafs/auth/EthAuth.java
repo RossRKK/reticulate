@@ -23,10 +23,10 @@ public class EthAuth implements IAuthenticator {
 	
 	private ReticulateAuth contract;
 	
-	public EthAuth(Credentials credentials) {
+	public EthAuth(Credentials credentials, String contractAddress) {
 		web3j = Web3j.build(new HttpService("https://rinkeby.infura.io/kMVN82WbWTrThVdoRsKH"));
 		
-		contract = new ReticulateAuth("0xaC2D7F31249d35442c8e317c156102a37f422BEA", web3j, 
+		contract = new ReticulateAuth(contractAddress, web3j, 
 				credentials, ManagedTransaction.GAS_PRICE, Contract.GAS_LIMIT);
 	}
 
@@ -196,6 +196,20 @@ public class EthAuth implements IAuthenticator {
 			e.printStackTrace();
 			return false;
 		}
+		/*byte[] correctSum = getCheckSum(fileId, blockIndex);
+		//doing this locally prevents uncessary execution on the blockchain
+		if (correctSum.length == checkSum.length) {
+			
+			for (int i = 0; i < correctSum.length; i++) {
+				if (correctSum[i] != checkSum[i]) {
+					return false;
+				}
+			}
+			
+			return true;
+		} else {
+			return false;
+		}*/
 	}
 
 	@Override

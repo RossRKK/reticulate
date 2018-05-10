@@ -51,7 +51,7 @@ public class ReticulateTests {
 		
 		byte[] testData = {0, 1, 2, 3, 4};
 		
-		FileBlock block = new FileBlock("test-file", testData, 0);
+		FileBlock block = new FileBlock(testData, 0);
 		block.setKey(buildAESKey());
 		
 		EncryptedFileBlock encrypted = ks.encrypt(block);
@@ -77,7 +77,7 @@ public class ReticulateTests {
 		
 		byte[] testData = {0, 1, 2, 3, 4};
 		
-		FileBlock block = new FileBlock("test-file", testData, 0);
+		FileBlock block = new FileBlock(testData, 0);
 		block.setKey(buildAESKey());
 		
 		EncryptedFileBlock encrypted = ks.encrypt(block);
@@ -106,7 +106,7 @@ public class ReticulateTests {
 		
 		byte[] testData = {0, 1, 2, 3, 4};
 		
-		FileBlock block = new FileBlock("test-file", testData, 0);
+		FileBlock block = new FileBlock(testData, 0);
 		block.setKey(buildAESKey());
 		
 		EncryptedFileBlock encrypted = ks1.encrypt(block);

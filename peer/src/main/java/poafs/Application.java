@@ -1,5 +1,7 @@
 package poafs;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +14,6 @@ import org.web3j.crypto.CipherException;
 
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
-import poafs.file.FileMeta;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.PeerInfo;
 import poafs.lib.Reference;
@@ -38,32 +39,35 @@ public class Application {
 	private static PropertiesManager pm = new PropertiesManager();
 	
 	public static void main(String[] args) throws IOException, ProtocolException, KeyException {
-		try {
-			if (args.length > 0) {
-				pm.loadProperties(args[0]);
-			} else {
-				pm.loadProperties(Reference.CONFIG_PATH);
+			String configPath = args.length > 0 ? args[0] : Reference.CONFIG_PATH;
+			
+			if (pm.loadProperties(configPath)) {
+				System.out.println("Config Loaded");
+				try {
+					net = new Network(pm.getWalletPath(), pm.getWalletPass(), pm.getContractAddress());
+					
+					//new Thread(new WebServer(8080, net)).start();
+					SparkServer web = new SparkServer(net);
+					
+					//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
+					//new NativeDiscovery().discover();
+			        
+					ui();
+				} catch (ProtocolException | CipherException e) {
+					System.err.println(e.getMessage());
+					e.printStackTrace();
+				}
 			}
-			
-			net = new Network(pm.getWalletPath(), pm.getWalletPass());
-			
-			//new Thread(new WebServer(8080, net)).start();
-			SparkServer web = new SparkServer(net);
-			
-			//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
-			//new NativeDiscovery().discover();
-	        
-			ui();
-		} catch (ProtocolException | CipherException e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-		}
+		
 	}
 	
 	private static void ui() {
 		boolean exit = false;
 		
+		//System.out.println("Ready");
+		
 		while (!exit) {
+			System.out.print("> ");
 			String command = sc.nextLine();
 			switch (command) {
 				case "list-files":
@@ -85,6 +89,22 @@ public class Application {
 				case "register-file":
 					try {
 						net.registerFile(sc.nextLine());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					break;
+				case "write-file":
+					try {
+						String id = sc.nextLine();
+						
+						File orig = new File(sc.nextLine());
+						int numOfBytes = (int) orig.length();
+						FileInputStream inFile = new FileInputStream(orig);
+						byte[] bytes = new byte[numOfBytes];
+						inFile.read(bytes);
+						inFile.close();
+						System.out.println("File read");
+						net.updateFileContent(id, bytes);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -147,6 +167,7 @@ public class Application {
 					System.out.println("load\t\tload a file from the network, the next line should be the if of the file you want to load");
 					System.out.println("save\t\tload a file from the network and save it to the path \"file\", the next line should be the if of the file you want to load");
 					System.out.println("register-file\tregister a file on the network, the next lines should be the path to the file, then the name the file should have on the network");
+					System.out.println("write-file\tupdate the contents of a file on the network, the next lines should be the id of the file, then the path to the file");
 					System.out.println("upload\t\tupload a registered file to other peers on the network, the next line should be the id of a file that is available locally");
 					System.out.println();
 					System.out.println("share\t\tshare a file with another user, fileId, recipient address, recipient public key (base 64), access level");

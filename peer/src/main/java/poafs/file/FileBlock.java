@@ -15,8 +15,7 @@ import javax.crypto.SecretKey;
  */
 public class FileBlock {
 
-	public FileBlock(String originPeerId, byte[] content, int index) {
-		this.originPeerId = originPeerId;
+	public FileBlock(byte[] content, int index) {
 		this.content = content;
 		this.index = index;
 	}
@@ -71,7 +70,7 @@ public class FileBlock {
 	}
 
 	public void save(String path) throws IOException {
-		PrintWriter out = new PrintWriter(new FileOutputStream(path + File.separator + index));
+		/*PrintWriter out = new PrintWriter(new FileOutputStream(path + File.separator + index));
 		
 		out.println(getHeaders());
 		
@@ -79,6 +78,9 @@ public class FileBlock {
 		
 		out.println(base64Encoded);
 		
+		out.close();*/
+		FileOutputStream out = new FileOutputStream(path + File.separator + index);
+		out.write(this.content);
 		out.close();
 	}
 }

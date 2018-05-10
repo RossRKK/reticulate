@@ -85,18 +85,24 @@ public class FileManager {
 			PoafsFile file = new PoafsFile(fileId);
 		
 			for (String blockFilePath:holdingFolder.list()) {				
-				Scanner sc = new Scanner(new FileInputStream(holdingFolder.getPath() + File.separator + blockFilePath));
+				/*Scanner sc = new Scanner(new FileInputStream(holdingFolder.getPath() + File.separator + blockFilePath));
 				
 				String originId = sc.nextLine();
 				
 				//this is an plain block
 				String content64 = sc.nextLine();
 				
-				byte[] content = Base64.getDecoder().decode(content64);
+				byte[] content = Base64.getDecoder().decode(content64);*/
 				
-				EncryptedFileBlock block = new EncryptedFileBlock(originId, content, Integer.parseInt(blockFilePath), null);
+				File f = new File(holdingFolder.getPath() + File.separator + blockFilePath);
+				FileInputStream fis = new FileInputStream(f);
+				byte[] content = new byte[(int) f.length()];
+				fis.read(content);
+				fis.close();
 				
-				sc.close();
+				EncryptedFileBlock block = new EncryptedFileBlock(content, Integer.parseInt(blockFilePath), null);
+				
+				//sc.close();
 				file.addBlock(block);
 			}
 			
@@ -136,7 +142,7 @@ public class FileManager {
 						
 						String originId = sc.nextLine();
 						
-						EncryptedFileBlock block = new EncryptedFileBlock(originId, null, Integer.parseInt(blockFilePath), null);
+						EncryptedFileBlock block = new EncryptedFileBlock(null, Integer.parseInt(blockFilePath), null);
 						
 						sc.close();
 						file.addBlock(block);

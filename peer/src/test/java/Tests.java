@@ -70,7 +70,7 @@ public class Tests {
 		HybridEncrypter e = new HybridEncrypter(keys.getPublic());
 		HybridDecrypter d = new HybridDecrypter(keys.getPrivate());
 		
-		FileBlock input = new FileBlock("test", data, 0);
+		FileBlock input = new FileBlock(data, 0);
 		
 		EncryptedFileBlock encrypted = e.encrypt(input);
 		FileBlock decrypted = d.decrypt(encrypted);
@@ -104,7 +104,7 @@ public class Tests {
 	public void saveTest() throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, IOException {
 		byte[] data = "Hello, World!".getBytes();
 		
-		FileBlock input = new FileBlock("test", data, 0);
+		FileBlock input = new FileBlock(data, 0);
 		
 		PoafsFile file = new PoafsFile("normal");
 		
@@ -121,7 +121,7 @@ public class Tests {
 		
 		HybridEncrypter e = new HybridEncrypter(keys.getPublic());
 		
-		FileBlock input = new FileBlock("test", data, 0);
+		FileBlock input = new FileBlock(data, 0);
 		
 		EncryptedFileBlock encrypted = e.encrypt(input);
 		

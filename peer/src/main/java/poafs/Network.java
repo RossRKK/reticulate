@@ -7,11 +7,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
@@ -39,7 +36,6 @@ import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
 import poafs.file.FileManager;
-import poafs.file.FileMeta;
 import poafs.file.PoafsFile;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.ITracker;
@@ -82,11 +78,11 @@ public class Network {
 	 */
 	private FileManager fileManager = new FileManager();
 	
-	public Network(String path, String pass) throws ProtocolException, IOException, CipherException {
+	public Network(String path, String pass, String contractAddress) throws ProtocolException, IOException, CipherException {
 		creds = WalletUtils.loadCredentials(pass, path);
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
-		this.auth = new EthAuth(creds);
+		this.auth = new EthAuth(creds, contractAddress);
 		tracker = new NetTracker();
 		
 		
@@ -128,15 +124,60 @@ public class Network {
     }
 	
 	/**
+	 * Write a file to the network, by segnemnting it and encrypting it
+	 * @param file The file to be uploaded
+	 * @param bytes The contents of the file
+	 * @param key The key to encrypt it with
+	 * @throws KeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoValidPeersException
+	 */
+	private void writeToNetwork(PoafsFile file, byte[] bytes, SecretKey key) throws KeyException, NoSuchAlgorithmException, NoValidPeersException {
+		
+		int noBlocks = (int) Math.ceil((double)bytes.length / Reference.BLOCK_SIZE);
+		
+		//clear the contents before adding new blocks
+		file.clearContents();
+				
+		for (int i = 0; i < noBlocks; i++) {
+			int remainingBytes = bytes.length - (i * blockLength);
+			int thisBlockLength = Math.min(blockLength, remainingBytes);
+			
+			byte[] contents = Arrays.copyOfRange(bytes, i * blockLength, i * blockLength + thisBlockLength);
+			
+			FileBlock block = new FileBlock(contents, i);
+			block.setKey(key);
+			
+			EncryptedFileBlock encrypted = keyStore.encrypt(block);
+			
+			file.addBlock(encrypted);
+			
+			tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), file.getId(), i);
+			
+			//register the blocks checksum
+			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+	        crypt.reset();
+	        crypt.update(encrypted.getContent());
+			if (!auth.updateCheckSum(file.getId(), i, crypt.digest())) {
+				System.err.println("Error updating checksum");
+			}
+			
+			//finally upload this block to the network
+			uploadBlock(file.getId(), encrypted);
+		}
+	}
+	
+	/**
 	 * Register a local file with the network.
 	 * @throws IOException 
 	 * @throws BadPaddingException 
 	 * @throws IllegalBlockSizeException 
 	 * @throws NoSuchPaddingException 
 	 * @throws NoSuchAlgorithmException 
+	 * @throws NoValidPeersException 
 	 * @throws InvalidKeyException 
 	 */
-	public void registerFile(String path) throws IOException, ProtocolException, KeyException, NoSuchAlgorithmException {
+	public void registerFile(String path) throws IOException, ProtocolException, KeyException, NoSuchAlgorithmException, NoValidPeersException {
 		//read in the file
 		File orig = new File(path);
 		int numOfBytes = (int) orig.length();
@@ -149,6 +190,8 @@ public class Network {
 		registerFile(bytes);
 	}
 	
+	
+	
 	/**
 	 * REgister a file eith the network
 	 * @param bytes The contents of the file.
@@ -158,48 +201,44 @@ public class Network {
 	 * @throws KeyException
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
+	 * @throws NoValidPeersException 
 	 */
-	public String registerFile(byte[] bytes) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException {
+	public String registerFile(byte[] bytes) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException, NoValidPeersException {
 		String id = UUID.randomUUID().toString();
 		System.out.println(id);
 		
 		SecretKey key = buildAESKey();
 		
-		int noBlocks = (int) Math.ceil((double)bytes.length / Reference.BLOCK_SIZE);
-		
 		PoafsFile file = new PoafsFile(id);
 		
-		for (int i = 0; i < noBlocks; i++) {
-			int remainingBytes = bytes.length - (i * blockLength);
-			int thisBlockLength = Math.min(blockLength, remainingBytes);
-			
-			byte[] contents = Arrays.copyOfRange(bytes, i * blockLength, i * blockLength + thisBlockLength);
-			
-			FileBlock block = new FileBlock(id, contents, i);
-			block.setKey(key);
-			
-			EncryptedFileBlock encrypted = keyStore.encrypt(block);
-			
-			file.addBlock(encrypted);
-			
-			tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), id, i);
-			
-			//register the blocks checksum
-			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
-	        crypt.reset();
-	        crypt.update(encrypted.getContent());
-			auth.updateCheckSum(id, i, crypt.digest());
-		}
+		writeToNetwork(file, bytes, key);
 		
 		System.out.println("Encrypted");
 		
 		fileManager.registerFile(file);
 		file.saveFile();
 		
-		auth.registerFile(file, noBlocks, ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
+		auth.registerFile(file, file.getNumBlocks(), ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
 		System.out.println("Registered");
 		
 		return id;
+	}
+	
+	/**
+	 * Write the new contents of a file to the network.
+	 * @param fileId The id of a the file.
+	 * @param bytes The new contents of the file.
+	 * @throws KeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoValidPeersException
+	 */
+	public void updateFileContent(String fileId, byte[] bytes) throws KeyException, NoSuchAlgorithmException, NoValidPeersException {
+		PoafsFile file = fileManager.getFile(fileId);
+		SecretKey key = keyStore.unwrapKey(auth.getKeyForFile(fileId));
+		
+		writeToNetwork(file, bytes, key);
+		
+		auth.updateFileLength(fileId, file.getNumBlocks());
 	}
 
 	/**
@@ -227,7 +266,7 @@ public class Network {
 		Set<String> peers = tracker.getPeers().keySet();
 		
 		//remove the local peer from the set
-		peers.remove(Application.getPropertiesManager().getPeerId());
+		//peers.remove(Application.getPropertiesManager().getPeerId());
 		
 		String peerId = null;
 		

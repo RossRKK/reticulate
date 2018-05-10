@@ -81,4 +81,10 @@ contract('ReticulateAuth', function(accounts) {
 
         assert.equal(await reticulateAuth.compareCheckSum(fileId, 0, dummyCheckSum), true);
     });
+
+    it('files should be able to have check sums for blocks', async function () {
+        await reticulateAuth.updateCheckSum(fileId, 0, dummyCheckSum, {from: accounts[0]});
+
+        assert.equal(await reticulateAuth.compareCheckSum(fileId, 0, dummyCheckSum), true);
+    });
 });

@@ -65,7 +65,7 @@ public class HybridEncrypter implements IEncrypter {
 			
 			byte[] wrappedKey = rsa.wrap(aesKey);
 			
-			return new EncryptedFileBlock(Application.getPropertiesManager().getPeerId(), encryptedContent, block.getIndex(), wrappedKey);
+			return new EncryptedFileBlock(encryptedContent, block.getIndex(), wrappedKey);
 		} catch (Exception e) {
 			throw new KeyException();
 		}
