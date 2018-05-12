@@ -180,7 +180,8 @@ public class EthAuth implements IAuthenticator {
 	@Override
 	public boolean updateCheckSum(String fileId, int blockIndex, byte[] checkSum) {
 		try {
-			contract.updateCheckSum(fileId, BigInteger.valueOf(blockIndex), checkSum).send();
+			//this is done asynchronously because loads of them happen at once
+			contract.updateCheckSum(fileId, BigInteger.valueOf(blockIndex), checkSum).sendAsync();
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -10,6 +10,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -132,9 +133,11 @@ public class Network {
 	 * @throws NoSuchAlgorithmException
 	 * @throws NoValidPeersException
 	 */
-	private void writeToNetwork(PoafsFile file, byte[] bytes, SecretKey key) throws KeyException, NoSuchAlgorithmException, NoValidPeersException {
+	private byte[][] divideIntoBlocks(PoafsFile file, byte[] bytes, SecretKey key) throws KeyException, NoSuchAlgorithmException, NoValidPeersException {
 		
 		int noBlocks = (int) Math.ceil((double)bytes.length / Reference.BLOCK_SIZE);
+		
+		byte[][] checkSums = new byte[noBlocks][];
 		
 		//clear the contents before adding new blocks
 		file.clearContents();
@@ -158,13 +161,11 @@ public class Network {
 			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
 	        crypt.reset();
 	        crypt.update(encrypted.getContent());
-			if (!auth.updateCheckSum(file.getId(), i, crypt.digest())) {
-				System.err.println("Error updating checksum");
-			}
-			
-			//finally upload this block to the network
-			uploadBlock(file.getId(), encrypted);
+	        
+	        checkSums[i] = crypt.digest();
 		}
+		
+		return checkSums;
 	}
 	
 	/**
@@ -211,7 +212,7 @@ public class Network {
 		
 		PoafsFile file = new PoafsFile(id);
 		
-		writeToNetwork(file, bytes, key);
+		byte[][] checkSums = divideIntoBlocks(file, bytes, key);
 		
 		System.out.println("Encrypted");
 		
@@ -220,6 +221,14 @@ public class Network {
 		
 		auth.registerFile(file, file.getNumBlocks(), ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
 		System.out.println("Registered");
+		
+		//updating checksums
+		for (int i = 0; i < checkSums.length; i++) {
+			if (!auth.updateCheckSum(file.getId(), i, checkSums[i])) {
+				System.err.println("Error updating checksum");
+			}
+		}
+		System.out.println("Checksums updated");
 		
 		return id;
 	}
@@ -236,9 +245,30 @@ public class Network {
 		PoafsFile file = fileManager.getFile(fileId);
 		SecretKey key = keyStore.unwrapKey(auth.getKeyForFile(fileId));
 		
-		writeToNetwork(file, bytes, key);
+		byte[][] checkSums = divideIntoBlocks(file, bytes, key);		
 		
 		auth.updateFileLength(fileId, file.getNumBlocks());
+		
+		//updating checksums
+		for (int i = 0; i < checkSums.length; i++) {
+			if (!auth.updateCheckSum(file.getId(), i, checkSums[i])) {
+				System.err.println("Error updating checksum");
+			}
+			
+			//send the updated file to effected nodes
+			Collection<String> peerIds = tracker.findBlock(fileId, i);
+
+			for(String id:peerIds) {
+				try {
+					uploadBlockToPeer(id, fileId, file.getBlocks().get(i));
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (ProtocolException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		System.out.println("Checksums updated");
 	}
 
 	/**
@@ -252,14 +282,45 @@ public class Network {
 		if (file != null) {
 			//upload each block
 			for (Entry<Integer, FileBlock> block:file.getBlocks().entrySet()) {
-				uploadBlock(fileId, block.getValue());
+				uploadBlockRandomly(fileId, block.getValue());
 			}
 		} else {
 			System.out.println(fileId + " doesn't exist locally, can't upload");
 		}
 	}
 	
-	private void uploadBlock(String fileId, FileBlock block) throws NoValidPeersException {
+	/**
+	 * Upload a file block to a specific peer
+	 * @param peerId The id of the peer.
+	 * @param fileId The id of the file.
+	 * @param block The file block to upload.
+	 * @throws NoValidPeersException
+	 */
+	private void uploadBlockToPeer(String peerId, String fileId, FileBlock block) throws IOException, ProtocolException {
+		long startTime = System.currentTimeMillis();
+		
+		InetSocketAddress addr = tracker.getHostForPeer(peerId);
+		
+		System.out.println("Uploading to " + peerId + " at " + addr.getHostName());
+		//get the block off of the peer
+		IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
+		
+		System.out.println("Uploading block: " + fileId + ":" + block.getIndex());
+		peer.sendBlock(fileId, block);
+		
+		long time = System.currentTimeMillis() - startTime;
+		
+		System.out.println("Upload for " + fileId + ":" + block.getIndex() + " took " + 
+				time + "ms " + ((double)time)/block.getContent().length + "B/ms");
+	}
+	
+	/**
+	 * Upload a block to a random peer.
+	 * @param fileId The id of the file the block is in.
+	 * @param block The block to upload
+	 * @throws NoValidPeersException
+	 */
+	private void uploadBlockRandomly(String fileId, FileBlock block) throws NoValidPeersException {
 		long startTime = System.currentTimeMillis();
 		
 		Random r = new Random();
@@ -276,19 +337,7 @@ public class Network {
 				//choose a random peer
 				peerId = peers.toArray(new String[peers.size()])[r.nextInt(peers.size())];
 				
-				InetSocketAddress addr = tracker.getHostForPeer(peerId);
-				
-				System.out.println("Uploading to " + peerId + " at " + addr.getHostName());
-				//get the block off of the peer
-				IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
-				
-				System.out.println("Uploading block: " + fileId + ":" + block.getIndex());
-				peer.sendBlock(fileId, block);
-				
-				long time = System.currentTimeMillis() - startTime;
-				
-				System.out.println("Upload for " + fileId + ":" + block.getIndex() + " took " + 
-						time + "ms " + ((double)time)/block.getContent().length + "B/ms");
+				uploadBlockToPeer(peerId, fileId, block);
 				
 				return;
 			} catch (IOException e) {

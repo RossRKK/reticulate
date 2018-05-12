@@ -259,7 +259,7 @@ class  BlockFetcher implements Runnable {
 				
 		        //check if the checksum is correct
 		        //FIXME checksum checking doesn't work
-				//if (auth.compareCheckSum(fileId, block.getIndex(), crypt.digest())) {
+				if (auth.compareCheckSum(fileId, block.getIndex(), crypt.digest())) {
 					
 					long time = System.currentTimeMillis() - startTime;
 					
@@ -269,11 +269,11 @@ class  BlockFetcher implements Runnable {
 							time + "ms " + ((double)time)/out.getContent().length + "B/ms");
 					
 					return out;
-				/*} else {
+				} else {
 					//TODO handle the error
 					System.out.println("Invalid checksum for block " + fileId + ":" + index);
 					return null;
-				}*/
+				}
 			} catch (KeyException | NoSuchAlgorithmException e) {
 				System.out.println("Error decrypting " + fileId + ":" + index);
 				System.out.println(block.getContent().length);
