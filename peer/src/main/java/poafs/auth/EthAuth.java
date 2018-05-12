@@ -180,8 +180,7 @@ public class EthAuth implements IAuthenticator {
 	@Override
 	public boolean updateCheckSum(String fileId, int blockIndex, byte[] checkSum) {
 		try {
-			//this is done asynchronously because loads of them happen at once
-			contract.updateCheckSum(fileId, BigInteger.valueOf(blockIndex), checkSum).sendAsync();
+			contract.updateCheckSum(fileId, BigInteger.valueOf(blockIndex), checkSum).send();
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -191,13 +190,13 @@ public class EthAuth implements IAuthenticator {
 
 	@Override
 	public boolean compareCheckSum(String fileId, int blockIndex, byte[] checkSum) {
-		try {
+		/*try {
 			return contract.compareCheckSum(fileId, BigInteger.valueOf(blockIndex), checkSum).send();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
-		}
-		/*byte[] correctSum = getCheckSum(fileId, blockIndex);
+		}*/
+		byte[] correctSum = getCheckSum(fileId, blockIndex);
 		//doing this locally prevents uncessary execution on the blockchain
 		if (correctSum.length == checkSum.length) {
 			
@@ -210,7 +209,7 @@ public class EthAuth implements IAuthenticator {
 			return true;
 		} else {
 			return false;
-		}*/
+		}
 	}
 
 	@Override

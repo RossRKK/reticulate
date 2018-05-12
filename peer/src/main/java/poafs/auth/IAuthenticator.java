@@ -1,5 +1,6 @@
 package poafs.auth;
 
+import poafs.file.FileBlock;
 import poafs.file.PoafsFile;
 
 /**

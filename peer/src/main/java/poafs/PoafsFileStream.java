@@ -253,13 +253,11 @@ class  BlockFetcher implements Runnable {
 			((EncryptedFileBlock)block).setWrappedKey(auth.getKeyForFile(fileId));
 			
 			try {
-				MessageDigest crypt = MessageDigest.getInstance("SHA-1");
-		        crypt.reset();
-		        crypt.update(block.getContent());
+				byte[] checkSum = block.getChecksum();
 				
 		        //check if the checksum is correct
 		        //FIXME checksum checking doesn't work
-				if (auth.compareCheckSum(fileId, block.getIndex(), crypt.digest())) {
+				if (auth.compareCheckSum(fileId, block.getIndex(), checkSum)) {
 					
 					long time = System.currentTimeMillis() - startTime;
 					

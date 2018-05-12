@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 import javax.crypto.SecretKey;
@@ -82,5 +84,13 @@ public class FileBlock {
 		FileOutputStream out = new FileOutputStream(path + File.separator + index);
 		out.write(this.content);
 		out.close();
+	}
+
+
+	public byte[] getChecksum() throws NoSuchAlgorithmException {
+		MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+        crypt.reset();
+        crypt.update(content);
+		return crypt.digest();
 	}
 }

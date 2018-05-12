@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import poafs.Application;
+import poafs.auth.IAuthenticator;
 import poafs.exception.ProtocolException;
 import poafs.file.EncryptedFileBlock;
 import poafs.file.FileBlock;
@@ -103,7 +104,7 @@ public class NetworkPeer implements IPeer {
 			while (!s.isClosed()) {
 				String request = io.nextLine(null);
 				
-				System.out.println(id + ": " + request);
+				//System.out.println(id + ": " + request);
 				
 				StringTokenizer tokens = new StringTokenizer(request);
 				

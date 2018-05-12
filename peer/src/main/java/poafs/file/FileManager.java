@@ -4,13 +4,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import poafs.auth.IAuthenticator;
 import poafs.lib.Reference;
 
 public class FileManager {
+	
+	private IAuthenticator auth;
+	
+	public FileManager(IAuthenticator auth) {
+		this.auth = auth;
+	}
 	
 	private HashMap<String, PoafsFile> availableFiles = new HashMap<String, PoafsFile>();
 
@@ -165,20 +173,27 @@ public class FileManager {
 	 * @param block The block being registered.
 	 */
 	public void registerBlock(String fileId, FileBlock block) {
-		if (availableFiles.containsKey(fileId)) {
-			availableFiles.get(fileId).addBlock(block);
-		} else {
-			//create a new file and 
-			PoafsFile file = new PoafsFile(fileId);
-			file.addBlock(block);
-			
-			availableFiles.put(fileId, file);
-		}
-		
-		//save the file to disk
 		try {
-			availableFiles.get(fileId).saveFile();
-		} catch (IOException e) {
+			if (auth.compareCheckSum(fileId, block.getIndex(), block.getChecksum())) {
+				if (availableFiles.containsKey(fileId)) {
+					availableFiles.get(fileId).addBlock(block);
+				} else {
+					//create a new file and 
+					PoafsFile file = new PoafsFile(fileId);
+					file.addBlock(block);
+					
+					availableFiles.put(fileId, file);
+				}
+				
+				//save the file to disk
+				try {
+					availableFiles.get(fileId).saveFile();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

@@ -77,13 +77,14 @@ public class Network {
 	/**
 	 * The file system manager.
 	 */
-	private FileManager fileManager = new FileManager();
+	private FileManager fileManager;
 	
 	public Network(String path, String pass, String contractAddress) throws ProtocolException, IOException, CipherException {
 		creds = WalletUtils.loadCredentials(pass, path);
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
 		this.auth = new EthAuth(creds, contractAddress);
+		fileManager = new FileManager(auth);
 		tracker = new NetTracker();
 		
 		
@@ -249,26 +250,36 @@ public class Network {
 		
 		auth.updateFileLength(fileId, file.getNumBlocks());
 		
+		System.out.println("File length updated");
+		
 		//updating checksums
 		for (int i = 0; i < checkSums.length; i++) {
-			if (!auth.updateCheckSum(file.getId(), i, checkSums[i])) {
-				System.err.println("Error updating checksum");
-			}
 			
-			//send the updated file to effected nodes
-			Collection<String> peerIds = tracker.findBlock(fileId, i);
-
-			for(String id:peerIds) {
-				try {
-					uploadBlockToPeer(id, fileId, file.getBlocks().get(i));
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (ProtocolException e) {
-					e.printStackTrace();
+			Integer index = new Integer(i);
+			
+			//this allows the upload to happen after the checksum has been updated
+			Runnable updateAndUpload = () -> { 
+				if (!auth.updateCheckSum(file.getId(), index.intValue(), checkSums[index.intValue()])) {
+					System.err.println("Error updating checksum");
 				}
-			}
+				
+				//send the updated file to effected nodes
+				Collection<String> peerIds = tracker.findBlock(fileId, index.intValue());
+	
+				for(String id:peerIds) {
+					try {
+						uploadBlockToPeer(id, fileId, file.getBlocks().get(index));
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (ProtocolException e) {
+						e.printStackTrace();
+					}
+				}
+				System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
+			};
+			
+			new Thread(updateAndUpload).start();
 		}
-		System.out.println("Checksums updated");
 	}
 
 	/**
@@ -321,8 +332,6 @@ public class Network {
 	 * @throws NoValidPeersException
 	 */
 	private void uploadBlockRandomly(String fileId, FileBlock block) throws NoValidPeersException {
-		long startTime = System.currentTimeMillis();
-		
 		Random r = new Random();
 		Set<String> peers = tracker.getPeers().keySet();
 		
