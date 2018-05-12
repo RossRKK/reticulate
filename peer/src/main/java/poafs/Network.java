@@ -225,9 +225,24 @@ public class Network {
 		
 		//updating checksums
 		for (int i = 0; i < checkSums.length; i++) {
-			if (!auth.updateCheckSum(file.getId(), i, checkSums[i])) {
-				System.err.println("Error updating checksum");
-			}
+			Integer index = new Integer(i);
+			
+			//this allows the upload to happen after the checksum has been updated
+			Runnable updateAndUpload = () -> { 
+				if (!auth.updateCheckSum(file.getId(), index.intValue(), checkSums[index.intValue()])) {
+					System.err.println("Error updating checksum");
+				}
+
+				try {
+					uploadBlockRandomly(id, file.getBlocks().get(index));
+				} catch (NoValidPeersException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
+			};
+			
+			new Thread(updateAndUpload).start();
 		}
 		System.out.println("Checksums updated");
 		
@@ -336,7 +351,7 @@ public class Network {
 		Set<String> peers = tracker.getPeers().keySet();
 		
 		//remove the local peer from the set
-		//peers.remove(Application.getPropertiesManager().getPeerId());
+		peers.remove(Application.getPropertiesManager().getPeerId());
 		
 		String peerId = null;
 		
