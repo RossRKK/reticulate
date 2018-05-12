@@ -3,6 +3,7 @@ package poafs.spark;
 import static spark.Spark.get;
 import static spark.Spark.post;
 import static spark.Spark.put;
+import static spark.Spark.staticFiles;
 
 import java.util.Base64;
 
@@ -26,6 +27,8 @@ public class SparkServer {
 	 */
 	public SparkServer(Network net) {
 		this.net = net;
+		
+		staticFiles.location("/static");
 		
 		post("/file", addFile);
 		
