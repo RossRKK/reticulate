@@ -1,13 +1,21 @@
 package poafs.local;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.UUID;
+
+import org.web3j.crypto.CipherException;
+import org.web3j.crypto.WalletUtils;
 
 import poafs.lib.Reference;
 
@@ -79,7 +87,8 @@ public class PropertiesManager {
 			
 		} catch (FileNotFoundException e) { 
 			System.err.println("Config File Not Found");
-			setDefaultProperties();
+			setDefaultProperties(path);
+			success = true;
 		} catch (IOException ex) {
 			System.err.println("Failed to Read Config File");
 			ex.printStackTrace();
@@ -107,11 +116,11 @@ public class PropertiesManager {
 	/**
 	 * Initialise the properties file with default properties.
 	 */
-	private void setDefaultProperties() {
+	private void setDefaultProperties(String path) {
 		OutputStream output = null;
 
 		try {
-			output = new FileOutputStream(Reference.CONFIG_PATH);
+			output = new FileOutputStream(path);
 
 			// set the properties value
 			peerId = UUID.randomUUID().toString();
@@ -125,15 +134,14 @@ public class PropertiesManager {
 			
 			knownPeerPort = Reference.DEFAULT_PORT;
 			prop.setProperty("knownPeerPort", "" + knownPeerPort);
-
-			walletPath = "wallet.json";
-			prop.setProperty("walletPath", "" + walletPath);
 			
-			walletPass = "<wallet file password>";
-			prop.setProperty("walletPass", walletPass);
-			
-			contractAddress = "<contract addrewss>";
+			contractAddress = "0xb8733F478bfd755BFBdc50fD2e16FC82245976B7";
 			prop.setProperty("contractAddress", contractAddress);
+
+			
+			createWallet();
+			prop.setProperty("walletPath", "" + walletPath);
+			prop.setProperty("walletPass", walletPass);
 			
 			// save properties to project root folder
 			prop.store(output, null);
@@ -148,6 +156,46 @@ public class PropertiesManager {
 					e.printStackTrace();
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Ask the user for the details to make a new wallet file.
+	 * @throws IOException 
+	 * @throws CipherException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws NoSuchProviderException 
+	 * @throws NoSuchAlgorithmException 
+	 */
+	private void createWallet() {
+		System.out.println("Creating a new Ethereum wallet");
+		
+		Scanner sc = new Scanner(System.in);
+		
+		String pass1 = null;
+		String pass2 = null;
+				
+		do {
+			if (pass1 != null && pass2 != null) {
+				System.out.println("Passwords don't match");
+			}
+			
+			System.out.print("Please enter a password for the new wallet: ");
+			pass1 = sc.nextLine();
+			
+			System.out.print("Please re-enter your password: ");
+			pass2 = sc.nextLine();
+		} while (!pass1.equals(pass2));
+		
+		sc.close();
+		
+		walletPass = pass1;
+		try {
+			walletPath = WalletUtils.generateNewWalletFile(pass1, new File("").getAbsoluteFile(), true);
+		} catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchProviderException
+				| CipherException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
