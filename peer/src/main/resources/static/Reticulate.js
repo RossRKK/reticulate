@@ -55,7 +55,7 @@ var Reticulate = (function () {
     //get a users access level to a file
     async function getAccess(fileId, userAddress) {
         return await $.ajax({
-            url: "/file/" + fileId + "/share?userAddress=" + userAddress,
+            url: "/file/" + fileId + "/share/" + userAddress,
             method: "GET"
         });
     }
@@ -63,7 +63,7 @@ var Reticulate = (function () {
     //revoke a users access to a file
     async function revokeShare(fileId, userAddress) {
         return await $.ajax({
-            url: "/file/" + fileId + "/share?userAddress=" + userAddress,
+            url: "/file/" + fileId + "/share/" + userAddress,
             method: "DELETE"
         });
     }
@@ -71,7 +71,7 @@ var Reticulate = (function () {
     //modify a users access level
     async function modifyAccess(fileId, userAddress, accessLevel) {
         return await $.ajax({
-            url: "/file/" + fileId + "/share?userAddress=" + userAddress + "&accessLevel=" + accessLevel,
+            url: "/file/" + fileId + "/share/" + userAddress + "&accessLevel=" + accessLevel,
             method: "PUT"
         });
     }
