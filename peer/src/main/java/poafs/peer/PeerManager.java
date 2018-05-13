@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import poafs.exception.ProtocolException;
 import poafs.file.FileManager;
 import poafs.file.tracking.ITracker;
+import poafs.lib.Reference;
 
 /**
  * The internal server of a peer.
@@ -93,6 +94,8 @@ public class PeerManager implements Runnable {
 					NetworkPeer peer = new NetworkPeer(s, t, fm, this);
 					
 					connectedPeers.put(peer.getId(), peer);
+					
+					t.registerPeer(peer.getId(), new InetSocketAddress(s.getInetAddress().getHostName(), Reference.DEFAULT_PORT));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
