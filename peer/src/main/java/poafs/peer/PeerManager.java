@@ -1,10 +1,11 @@
 package poafs.peer;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.UnknownHostException;
+import java.util.HashMap;
 
 import poafs.exception.ProtocolException;
 import poafs.file.FileManager;
@@ -15,7 +16,7 @@ import poafs.file.tracking.ITracker;
  * @author rossrkk
  *
  */
-public class Server implements Runnable {
+public class PeerManager implements Runnable {
 	
 	/**
 	 * The port that this server listens on.
@@ -25,16 +26,40 @@ public class Server implements Runnable {
 	/**
 	 * All of the peers who have connected view this server.
 	 */
-	private List<IPeer> connectedPeers = new ArrayList<IPeer>();
+	private HashMap<String, IPeer> connectedPeers = new HashMap<String, IPeer>();
 	
 	private FileManager fm;
 
 	private ITracker t;
 
-	public Server(int port, ITracker t, FileManager fm) {
+	public PeerManager(int port, ITracker t, FileManager fm) {
 		this.port = port;
 		this.fm = fm;
 		this.t = t;
+	}
+	
+	/**
+	 * Open a connection to a peer. Reuse an existing one if possible.
+	 * @param peerId The id of the peer to connect to.
+	 * @return That peers object.
+	 * @throws UnknownHostException
+	 * @throws ProtocolException
+	 * @throws IOException
+	 */
+	public IPeer openConnection(String peerId) throws UnknownHostException, ProtocolException, IOException {
+		IPeer connected = connectedPeers.get(peerId);
+		
+		if (connected != null) {
+			return connected;
+		} else {
+			InetSocketAddress addr = t.getHostForPeer(peerId);
+			
+			NetworkPeer p =  new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
+			
+			connectedPeers.put(peerId, p);
+			
+			return p;
+		}
 	}
 	
 	@Override
@@ -53,7 +78,7 @@ public class Server implements Runnable {
 					
 					NetworkPeer peer = new NetworkPeer(s, t, fm);
 					
-					connectedPeers.add(peer);
+					connectedPeers.put(peer.getId(), peer);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

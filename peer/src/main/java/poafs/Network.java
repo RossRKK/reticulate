@@ -46,7 +46,7 @@ import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.peer.IPeer;
 import poafs.peer.NetworkPeer;
-import poafs.peer.Server;
+import poafs.peer.PeerManager;
 
 /**
  * This is a class that is designed to represent and entire POAFS network.
@@ -79,6 +79,8 @@ public class Network {
 	 */
 	private FileManager fileManager;
 	
+	private PeerManager peerManager;
+	
 	public Network(String path, String pass, String contractAddress) throws ProtocolException, IOException, CipherException {
 		creds = WalletUtils.loadCredentials(pass, path);
 		System.out.println(creds.getAddress());
@@ -87,11 +89,16 @@ public class Network {
 		fileManager = new FileManager(auth);
 		tracker = new NetTracker();
 		
+		peerManager = new PeerManager(Reference.DEFAULT_PORT, tracker, fileManager);
 		
 		//start the local server
-		new Thread(new Server(Reference.DEFAULT_PORT, tracker, fileManager)).start();
+		new Thread(peerManager).start();
 		
-		connect();
+		try {
+			connect();
+		} catch (ProtocolException | IOException e) {
+			System.out.println("Failed to connect to known peer");
+		}
 	}
 	
 	/**
@@ -107,7 +114,8 @@ public class Network {
 			
 			tracker.registerPeer(pm.getKnownPeerId(), new InetSocketAddress(pm.getKnownPeerAddress(), pm.getKnownPeerPort()));
 			
-			IPeer knownPeer = new NetworkPeer(new Socket(pm.getKnownPeerAddress(), pm.getKnownPeerPort()), tracker, fileManager);
+			//IPeer knownPeer = new NetworkPeer(new Socket(pm.getKnownPeerAddress(), pm.getKnownPeerPort()), tracker, fileManager);
+			IPeer knownPeer = peerManager.openConnection(pm.getKnownPeerId());
 			
 			System.out.println("Connected to known peer");
 			
@@ -329,7 +337,8 @@ public class Network {
 		
 		System.out.println("Uploading to " + peerId + " at " + addr.getHostName());
 		//get the block off of the peer
-		IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
+		//IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
+		IPeer peer = peerManager.openConnection(peerId);
 		
 		System.out.println("Uploading block: " + fileId + ":" + block.getIndex());
 		peer.sendBlock(fileId, block);
@@ -390,7 +399,7 @@ public class Network {
 	}
 	
 	public PoafsFileStream fetchFile(String fileId) {
-		return new PoafsFileStream(fileId, 5, auth, keyStore, tracker, fileManager);
+		return new PoafsFileStream(fileId, 5, auth, keyStore, tracker, fileManager, peerManager);
 	}
 
 	

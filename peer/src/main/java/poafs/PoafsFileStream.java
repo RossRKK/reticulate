@@ -22,6 +22,7 @@ import poafs.file.FileMeta;
 import poafs.file.tracking.ITracker;
 import poafs.peer.IPeer;
 import poafs.peer.NetworkPeer;
+import poafs.peer.PeerManager;
 
 /**
  * An input stream that represents a file that exists on the network.
@@ -85,9 +86,9 @@ public class PoafsFileStream extends InputStream {
 	 */
 	private FileManager fm;
 	
-	private boolean ready = false;
+	private PeerManager pm;
 	
-	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker, FileManager fm) {
+	public PoafsFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker, FileManager fm, PeerManager pm) {
 		this.auth = auth;
 		this.fileId = fileId;
 		fileLength = auth.getFileLength(fileId);
@@ -96,6 +97,7 @@ public class PoafsFileStream extends InputStream {
 		this.decrypter = decrypter;
 		this.tracker = tracker;
 		this.fm = fm;
+		this.pm = pm;
 		
 		initialFetch();
 	}
@@ -136,7 +138,7 @@ public class PoafsFileStream extends InputStream {
 	 */
 	private void startFetcher() {
 		//start up a new block fetcher
-		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, auth, fileContent, decrypter, tracker, fm);
+		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, auth, fileContent, decrypter, tracker, fm, pm);
 		fetchers.put(nextFetchIndex, bf);
 		new Thread(bf).start();
 		nextFetchIndex++;
@@ -202,13 +204,16 @@ class  BlockFetcher implements Runnable {
 	
 	private FileManager fm;
 	
-	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker, FileManager fm) {
+	private PeerManager pm;
+	
+	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker, FileManager fm, PeerManager pm) {
 		this.auth = auth;
 		this.fileId = fileId;
 		this.index = index;
 		this.fileContent = fileContent;
 		this.d = d;
 		this.fm = fm;
+		this.pm = pm;
 		t = tracker;
 	}
 
@@ -312,11 +317,14 @@ class  BlockFetcher implements Runnable {
 					//choose a random peer
 					peerId = peerIds.toArray(new String[peerIds.size()])[r.nextInt(peerIds.size())];
 					
-					InetSocketAddress addr = t.getHostForPeer(peerId);
+					//InetSocketAddress addr = t.getHostForPeer(peerId);
 					
-					System.out.println("Fetching from: " + addr.getHostName());
+					IPeer peer = pm.openConnection(peerId);
+					
+					//System.out.println("Fetching from: " + addr.getHostName());
+					System.out.println("Fetching from: " + peer.getId());
 					//get the block off of the peer
-					IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
+					//IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
 					
 					System.out.println("Requesting block: " + fileId + ":" + block);
 					FileBlock out = peer.requestBlock(fileId, block);
