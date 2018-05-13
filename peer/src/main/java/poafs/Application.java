@@ -16,6 +16,7 @@ import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.PeerInfo;
+import poafs.file.tracking.Worker;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.spark.SparkServer;
@@ -51,6 +52,8 @@ public class Application {
 					
 					//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
 					//new NativeDiscovery().discover();
+					/*Worker w = new Worker(net);
+					new Thread(w).start();*/
 			        
 					ui();
 				} catch (ProtocolException | CipherException e) {
@@ -178,7 +181,11 @@ public class Application {
 			
 		}
 		
+		net.shutdown();
+		
 		sc.close();
+		
+		System.exit(0);
 	}
 	
 	private static void listPeers(List<PeerInfo> peers) {

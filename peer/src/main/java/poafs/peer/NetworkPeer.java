@@ -132,6 +132,8 @@ public class NetworkPeer implements IPeer {
 			
 			//sc.close();
 			
+			System.out.println(id + " disconnected");
+			
 			//TODO remove the peer from the peer manger's active connections
 			pm.onDisconnect(id);
 		} finally {
@@ -382,4 +384,17 @@ public class NetworkPeer implements IPeer {
 	public String getId() {
 		return id;
 	}
+
+	@Override
+	public void disconnect() {
+		try {
+			s.close();
+			System.out.println("Closed connection to: " + id);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
 }

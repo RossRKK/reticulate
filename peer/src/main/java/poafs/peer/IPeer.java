@@ -43,4 +43,9 @@ public interface IPeer extends Runnable {
 	 * @return A set of known peers.
 	 */
 	public Set<PeerInfo> requestKnownPeers();
+	
+	/**
+	 * Close the connection.
+	 */
+	public void disconnect();
 }

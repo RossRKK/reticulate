@@ -12,7 +12,7 @@ import poafs.exception.ProtocolException;
  */
 public class Worker implements Runnable {
 	
-	private static final long INTERVAL = 600000;
+	private static final long INTERVAL = 30000;
 	
 	private Network net;
 	
@@ -32,19 +32,20 @@ public class Worker implements Runnable {
 	@Override
 	public void run() {
 		while (active) {
-			//attempt to traverse the network
-			try {
-				net.startTraversal();
-			} catch (ProtocolException | IOException e1) {
-				e1.printStackTrace();
-			}
-			
 			//sleep
 			try {
 				Thread.sleep(INTERVAL);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			
+			
+			//attempt to traverse the network
+			try {
+				net.startTraversal();
+			} catch (ProtocolException | IOException e1) {
+				e1.printStackTrace();
+			}		
 		}
 	}
 

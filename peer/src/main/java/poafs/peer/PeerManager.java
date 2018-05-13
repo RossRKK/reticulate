@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import poafs.exception.ProtocolException;
 import poafs.file.FileManager;
@@ -68,6 +69,12 @@ public class PeerManager implements Runnable {
 	 */
 	void onDisconnect(String id) {
 		connectedPeers.remove(id);
+	}
+	
+	public void closeConnections() {
+		for (Entry<String, IPeer> e:connectedPeers.entrySet()) {
+			e.getValue().disconnect();
+		}
 	}
 	
 	@Override

@@ -538,4 +538,8 @@ public class Network {
 	public int getLengthOfFile(String fileId) {
 		return auth.getFileLength(fileId);
 	}
+
+	public void shutdown() {
+		peerManager.closeConnections();
+	}
 }
