@@ -34,6 +34,9 @@ public class NetTracker implements ITracker {
 	public Set<String> findBlock(String fileId, int blockIndex) {
 		if (files.get(fileId) == null) {
 			Set<String> peers = new HashSet<String>();
+			
+			//TODO do another network traversal to try and find it
+			
 			return peers;
 		} else {
 			return files.get(fileId).getPeerIdsForBlock(blockIndex);

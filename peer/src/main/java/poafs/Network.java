@@ -11,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -95,7 +96,7 @@ public class Network {
 		new Thread(peerManager).start();
 		
 		try {
-			connect();
+			startTraversal();
 		} catch (ProtocolException | IOException e) {
 			System.out.println("Failed to connect to known peer");
 		}
@@ -107,24 +108,85 @@ public class Network {
 	 * @throws ProtocolException 
 	 * @throws UnknownHostException 
 	 */
-	private void connect() throws UnknownHostException, ProtocolException, IOException {
+	public void startTraversal() throws UnknownHostException, ProtocolException, IOException {
 		PropertiesManager pm = Application.getPropertiesManager();
 		
 		if (pm.getKnownPeerId() != "") {
 			
-			tracker.registerPeer(pm.getKnownPeerId(), new InetSocketAddress(pm.getKnownPeerAddress(), pm.getKnownPeerPort()));
-			
-			//IPeer knownPeer = new NetworkPeer(new Socket(pm.getKnownPeerAddress(), pm.getKnownPeerPort()), tracker, fileManager);
-			IPeer knownPeer = peerManager.openConnection(pm.getKnownPeerId());
-			
-			System.out.println("Connected to known peer");
-			
-			tracker.registerPeers(knownPeer.requestKnownPeers());
-			System.out.println("Fetched known peers");
-			
-			tracker.registerFiles(pm.getKnownPeerId(), knownPeer.requestAvailableFiles());
-			System.out.println("Fetched known files");
+			startTraversal(pm.getKnownPeerId(), pm.getKnownPeerAddress(), pm.getKnownPeerPort());
 		}
+	}
+	
+	/**
+	 * Set used to track which 
+	 */
+	private Set<String> traversed = new HashSet<String>();
+	
+	/**
+	 * The maximum depth to traverse over.
+	 */
+	private static final int MAX_TRAVERSAL_DEPTH = 10;
+	
+	/**
+	 * Start a network traversal by using the specified peer.
+	 * @param peerId The id of the peer.
+	 * @param host The peers host name.
+	 * @param port The port the peer listens on.
+	 */
+	public void startTraversal(String peerId, String host, int port) {
+		traversed = new HashSet<String>();
+		
+		traverse(new PeerInfo(peerId, new InetSocketAddress(host, port)), 0);
+		
+		System.out.println("Completed network traversal");
+	}
+	
+	/**
+	 * Private method to traverse the network to get the current state.
+	 * @param peerInfo The next peer to connect to.
+	 * @param depth The current depth the traversal is at.
+	 */
+	private void traverse(PeerInfo peerInfo, int depth) {
+		tracker.registerPeer(peerInfo.getPeerId(), peerInfo.getAddr());
+		System.out.println("Found peer: " + peerInfo.getPeerId());
+		
+		traversed.add(peerInfo.getPeerId());
+		
+		try {
+			//open a connection to this peer
+			IPeer peer = peerManager.openConnection(peerInfo.getPeerId());
+			
+			//find all the peers it knows about
+			Set<PeerInfo> knownPeers = peer.requestKnownPeers();
+			
+			//register them
+			tracker.registerPeers(knownPeers);
+			
+			System.out.println("Got known peers from: " + peerInfo.getPeerId());
+			
+			//register it's files
+			tracker.registerFiles(peerInfo.getPeerId(), peer.requestAvailableFiles());
+			
+			System.out.println("Got known files from: " + peerInfo.getPeerId());
+			
+			if (depth < MAX_TRAVERSAL_DEPTH) {
+				//apply the same operation to all the peers it knows about
+				for (PeerInfo pi:knownPeers) {
+					//only look at a peer again if we haven't connected to it before
+					if (!traversed.contains(pi.getPeerId())) {
+						//recursively traverse the tree
+						traverse(pi, depth + 1);
+					} else {
+						System.out.println("Reached maximum traversal depth");
+					}
+				}
+			}
+		} catch (ProtocolException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 	}
 	
 	public static SecretKey buildAESKey() throws NoSuchAlgorithmException {
