@@ -16,7 +16,6 @@ import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.PeerInfo;
-import poafs.file.tracking.Worker;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.spark.SparkServer;
@@ -47,11 +46,11 @@ public class Application {
 				try {
 					net = new Network(pm.getWalletPath(), pm.getWalletPass(), pm.getContractAddress());
 					
+					//new Thread(new WebServer(8080, net)).start();
 					SparkServer web = new SparkServer(net);
 					
-					//start the worker thread
-					Worker worker = new Worker(net);
-					new Thread(worker).start();
+					//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
+					//new NativeDiscovery().discover();
 			        
 					ui();
 				} catch (ProtocolException | CipherException e) {
