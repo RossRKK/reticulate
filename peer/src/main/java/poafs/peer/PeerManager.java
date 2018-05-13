@@ -54,12 +54,20 @@ public class PeerManager implements Runnable {
 		} else {
 			InetSocketAddress addr = t.getHostForPeer(peerId);
 			
-			NetworkPeer p =  new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
+			NetworkPeer p =  new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm, this);
 			
 			connectedPeers.put(peerId, p);
 			
 			return p;
 		}
+	}
+	
+	/**
+	 * Handle a peer disconnecting.
+	 * @param id The id of the peer who disconnected.
+	 */
+	void onDisconnect(String id) {
+		connectedPeers.remove(id);
 	}
 	
 	@Override
@@ -73,10 +81,9 @@ public class PeerManager implements Runnable {
 				try {
 					s = ss.accept();
 				
-				
 					System.out.println("Recieved remote connection from: " + s.getInetAddress().getHostName() + ":" + s.getPort());
 					
-					NetworkPeer peer = new NetworkPeer(s, t, fm);
+					NetworkPeer peer = new NetworkPeer(s, t, fm, this);
 					
 					connectedPeers.put(peer.getId(), peer);
 				} catch (IOException e) {

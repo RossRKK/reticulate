@@ -57,16 +57,19 @@ public class NetworkPeer implements IPeer {
 	 */
 	private ITracker t;
 	
+	private PeerManager pm;
+	
 	/**
 	 * Open a connection to a new peer.
 	 * @param s The socket to connect through.
 	 * @throws IOException
 	 */
-	public NetworkPeer(Socket s, ITracker t, FileManager fm) throws ProtocolException {
+	public NetworkPeer(Socket s, ITracker t, FileManager fm, PeerManager pm) throws ProtocolException {
 		try {
 			this.s = s;
 			this.fm = fm;
 			this.t = t;
+			this.pm = pm;
 			
 			/*out = new PrintWriter(s.getOutputStream());
 			sc = new Scanner(s.getInputStream());*/
@@ -128,6 +131,9 @@ public class NetworkPeer implements IPeer {
 			}
 			
 			//sc.close();
+			
+			//TODO remove the peer from the peer manger's active connections
+			pm.onDisconnect(id);
 		} finally {
 			try {
 				s.close();
