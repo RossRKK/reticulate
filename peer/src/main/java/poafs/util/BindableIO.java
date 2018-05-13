@@ -127,8 +127,6 @@ public class BindableIO implements Runnable {
 			
 			//print the line
 			out.println(line);
-			
-			out.flush();
 		} catch (InterruptedException e) {
 			System.err.println("Interrupted");
 		}
@@ -151,6 +149,19 @@ public class BindableIO implements Runnable {
 			
 			//print the line
 			out.print(line);
+		} catch (InterruptedException e) {
+			
+		}
+	}
+	
+	public void flush(String id) {
+		try {
+			synchronized (bindWaiter) {
+				//wait for the bind ids to match
+				while (bindId != id) {
+					bindWaiter.wait();
+				}
+			}
 			
 			out.flush();
 		} catch (InterruptedException e) {
@@ -162,7 +173,7 @@ public class BindableIO implements Runnable {
 	 * Bind the io stream.
 	 * @return The binding id.
 	 */
-	public String bind() {
+	public synchronized String bind() {
 		String newBindId = UUID.randomUUID().toString();
 		
 		if (bindId == null) {
@@ -183,7 +194,7 @@ public class BindableIO implements Runnable {
 	 * Unbind the stream.
 	 * @param id The bind id.
 	 */
-	public void unbind(String id) {
+	public synchronized void unbind(String id) {
 		if (bindId == id) {
 			bindId = bindQueue.poll();
 			

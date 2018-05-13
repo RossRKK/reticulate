@@ -71,9 +71,6 @@ public class NetworkPeer implements IPeer {
 			this.t = t;
 			this.pm = pm;
 			
-			/*out = new PrintWriter(s.getOutputStream());
-			sc = new Scanner(s.getInputStream());*/
-			
 			io = new BindableIO(s.getInputStream(), s.getOutputStream());
 			
 			String bindId = io.bind();
@@ -81,7 +78,7 @@ public class NetworkPeer implements IPeer {
 			io.println("Reticulate 0.1", bindId);
 			
 			io.println(Application.getPropertiesManager().getPeerId(), bindId);
-			//out.flush();
+			io.flush(bindId);
 			
 			//TODO check that protocol versions are compatible
 			String versionDec = io.nextLine(bindId);
@@ -126,13 +123,9 @@ public class NetworkPeer implements IPeer {
 						availableFiles();
 						break;
 				}
-				
-				//out.flush();
 			}
 			
-			//sc.close();
-			
-			//TODO remove the peer from the peer manger's active connections
+			//remove the peer from the peer manger's active connections
 			pm.onDisconnect(id);
 		} finally {
 			try {
@@ -181,6 +174,7 @@ public class NetworkPeer implements IPeer {
 		//out.write(block.getContent());
 		io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
 		
+		io.flush(bindId);
 		io.unbind(bindId);
 		//out.flush();
 	}
@@ -201,6 +195,8 @@ public class NetworkPeer implements IPeer {
 			io.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort(), bindId);
 		}
 		
+		io.flush(bindId);
+		
 		io.unbind(bindId);
 	}
 	
@@ -214,7 +210,7 @@ public class NetworkPeer implements IPeer {
 		Set<PeerInfo> peers = new HashSet<PeerInfo>();
 		
 		io.println("known-peers", bindId);
-		//out.flush();
+		io.flush(bindId);
 		
 		String[] lengthLine = io.nextLine(bindId).split(" ");
 		int length = Integer.parseInt(lengthLine[1]);
@@ -237,6 +233,7 @@ public class NetworkPeer implements IPeer {
 			}
 		}
 		
+		
 		io.unbind(bindId);
 		
 		return peers;
@@ -246,6 +243,8 @@ public class NetworkPeer implements IPeer {
 	 * Send back a list of available files
 	 */
 	private synchronized void availableFiles() {
+		//FIXME this seems to not terminate sometimes
+		
 		String bindId = io.bind();
 		//get all the peers we know about
 		Map<String, PoafsFile> files = fm.getAvailableFiles();
@@ -267,6 +266,8 @@ public class NetworkPeer implements IPeer {
 			io.println("", bindId);
 		}
 		
+		io.flush(bindId);
+		
 		io.unbind(bindId);
 	}
 	
@@ -283,6 +284,7 @@ public class NetworkPeer implements IPeer {
 			Map<String, List<Integer>> files = new HashMap<String, List<Integer>>();
 			
 			io.println("available-files", bindId);
+			io.flush(bindId);
 			//out.flush();
 			
 			String[] lengthLine = io.nextLine(bindId).split(" ");
@@ -308,6 +310,7 @@ public class NetworkPeer implements IPeer {
 				}
 			}
 			
+			
 			io.unbind(bindId);
 			
 			return files;
@@ -331,6 +334,7 @@ public class NetworkPeer implements IPeer {
 			String request = "fetch " + fileId + ":" + index;
 			
 			io.println(request, bindId);
+			io.flush(bindId);
 			
 			FileBlock block = readBlock(index, bindId);
 			
@@ -374,6 +378,8 @@ public class NetworkPeer implements IPeer {
 		
 		//send the block content
 		io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
+		
+		io.flush(bindId);
 		
 		io.unbind(bindId);
 	}
