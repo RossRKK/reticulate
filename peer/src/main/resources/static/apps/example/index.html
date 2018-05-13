@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <title>Reticulate</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+        <script src="/Reticulate.js"></script>
+        <script>
+            $(async function () {
+                let lorem = await Reticulate.getFile("219dc5e1-d29b-4858-9c8a-337a0f1f424c");
+                $("#body").text(lorem);
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Example App</h1>
+        <div id="body"></h2>
+    </body>
+</html>
