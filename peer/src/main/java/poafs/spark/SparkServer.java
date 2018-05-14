@@ -12,9 +12,11 @@ import static spark.Spark.path;
 
 import javax.servlet.http.HttpServletResponse;
 
+import poafs.Application;
 import poafs.Network;
 import poafs.PoafsFileStream;
 import poafs.lib.Reference;
+import poafs.local.PropertiesManager;
 import spark.Route;
 
 public class SparkServer {
@@ -29,6 +31,15 @@ public class SparkServer {
 		this.net = net;
 		
 		staticFiles.location("/static");
+		
+		path("/peer", () -> {
+			get("/id", peerId);
+			
+			get("/addr", addr);
+			
+			get("/key", pubKey);
+		});
+	
 		
 		post("/file", addFile);
 		
@@ -52,6 +63,18 @@ public class SparkServer {
 		});
 		
 	}
+	
+	private Route peerId = (req,res) -> {
+		return Application.getPropertiesManager().getPeerId();
+	};
+	
+	private Route addr = (req,res) -> {
+		return net.getCreds().getAddress();
+	};
+	
+	private Route pubKey = (req,res) -> {
+		return Base64.getEncoder().encodeToString(net.getKeyStore().getPublicKey().getEncoded());
+	};
 	
 	/**
 	 * Handle requests for files.

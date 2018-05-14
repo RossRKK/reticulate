@@ -1,12 +1,70 @@
 <html>
     <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
         <title>Reticulate</title>
+        <!-- jQuery -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
+        <!-- bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+        <!-- font awesome -->
+        <link href="/fontawesome-all.min.css" rel="stylesheet">
+
+        <!-- reticulate -->
         <script src="/Reticulate.js"></script>
+
+        <!-- stuff for this page -->
+        <link rel="stylesheet" href="style.css">
+        <script src="/script.js"></script>
     </head>
     <body>
-        <h1>Welcome to the Reticulate Network</h1>
-        <h2>The secure distributed file sharing network</h2>
+        <div class="container">
+            <hr>
+            <div class="row">
+                <div class="col-1"><i class="fas fa-3x  fa-code-branch"></i></div>
+                <div class="col-10"><h1>Reticulate</h1></div>
+                <div class="col-1"><i class="fas fa-2x fa-upload"></i></div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-3"><h3>Peer ID:</h3></div>
+                <div class="col-1"><i class="far fa-lg fa-copy"></i></div>
+
+                <div class="col-4"><h3>User Address:</h3></div>
+                <div class="col-1"><i class="far fa-lg fa-copy"></i></div>
+
+                <div class="col-2"><h3>Public Key:</h3></div>
+                <div class="col-1"><i class="far fa-lg fa-copy"></i></div>
+            </div>
+            <div class="row">
+                <div class="col-4"><span id="peer-id"></span></div>
+                <div class="col-5"><span id="addr"></span></div>
+                <div class="col-3"><span id="key"></span></div>
+            </div>
+
+            <hr>
+
+            <div>
+                <h3>Download/Modify File</h3>
+                <div class="row">
+                    <div class="col-1">File ID: </div>
+                    <div class="col-5"><input style="width: 100%" id="file-id-in" type="text"></input></div>
+                    <div class="col-2">Access Level: <span id="file-access-level">Admin</span></div>
+
+                    <div class="col-4 row">
+                        <div class="col-3" id="file-download-button"><i class="fa fa-2x fa-download"></i></div>
+                        <div class="col-3" id="file-share-button"><i class="fa fa-2x fa-share-square"></i></div>
+                        <div class="col-3" id="file-settings-button"><i class="fa fa-2x fa-cog"></i></div>
+                        <div class="col-3" id="file-delete-button"><i class="fa fa-2x fa-trash"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

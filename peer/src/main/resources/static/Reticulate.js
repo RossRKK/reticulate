@@ -10,6 +10,30 @@
 
 var Reticulate = (function () {
 
+    //get the id of the peer
+    async function peerId() {
+        return await $.ajax({
+            url: "/peer/id",
+            method: "GET"
+        });
+    }
+
+    //get the wallet address of the logged in user
+    async function addr() {
+        return await $.ajax({
+            url: "/peer/addr",
+            method: "GET"
+        });
+    }
+
+    //get the public key of the logged in user (base64)
+    async function key() {
+        return await $.ajax({
+            url: "/peer/key",
+            method: "GET"
+        });
+    }
+
     //add a file to the network with specified contents
     async function addFile(content) {
         return await $.ajax({
@@ -78,6 +102,9 @@ var Reticulate = (function () {
 
     //public exports
     return {
+        peerId,
+        addr,
+        key,
         addFile,
         getFile,
         updateFile,
