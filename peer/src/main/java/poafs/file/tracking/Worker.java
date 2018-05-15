@@ -61,8 +61,11 @@ public class Worker implements Runnable {
 				e1.printStackTrace();
 			}
 			
+			//TODO ensure that all the local files checksums are up to date
+			
 			int numPeers = net.listPeers().size();
 			
+			//we can't have redundancy higher than the number of peers on the network
 			ensureRedundancy(redun < numPeers ? redun : numPeers);
 		}
 	}
@@ -77,8 +80,6 @@ public class Worker implements Runnable {
 			for (FileBlock block: file.getBlocks().values()) {
 				//get the peers who have a copy of the block
 				Collection<String> peerIds = t.findBlock(file.getId(), block.getIndex());
-				
-				//TODO check that these peers still have a copy
 				
 				//create redundant copies
 				while (peerIds.size() < r) {

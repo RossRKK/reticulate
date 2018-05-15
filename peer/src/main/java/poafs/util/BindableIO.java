@@ -84,18 +84,18 @@ public class BindableIO implements Runnable {
 			//wait for the bind ids to match
 			
 			//wait for a line to be read
-			while (shouldWaitForLine) {
+			while (shouldWaitForLine || bindId != id) {
 				synchronized (lineWaiter) {
 					lineWaiter.wait();
 				}
 			}
 			
-			synchronized (bindWaiter) {
+			/*synchronized (bindWaiter) {
 				//wait for the bind ids to match
 				while (bindId != id) {
 					bindWaiter.wait();
 				}
-			}
+			}*/
 			
 			//get the line
 			String line = this.line;
