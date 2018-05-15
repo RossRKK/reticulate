@@ -61,7 +61,6 @@ public class Worker implements Runnable {
 				e1.printStackTrace();
 			}
 			
-			//TODO ensure that all the local files checksums are up to date
 			
 			int numPeers = net.listPeers().size();
 			
@@ -78,6 +77,9 @@ public class Worker implements Runnable {
 		//for each file this peer has a copy of TODO the user may want to ensure file that there isn't a local copy of are maintained as well
 		for (PoafsFile file: fm.getAvailableFiles().values()) {
 			for (FileBlock block: file.getBlocks().values()) {
+				
+				//TODO check that the checksum is up to date
+				
 				//get the peers who have a copy of the block
 				Collection<String> peerIds = t.findBlock(file.getId(), block.getIndex());
 				

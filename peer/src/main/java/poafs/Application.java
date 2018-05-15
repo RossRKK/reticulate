@@ -1,10 +1,13 @@
 package poafs;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -16,7 +19,6 @@ import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.PeerInfo;
-import poafs.file.tracking.Worker;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.spark.SparkServer;
@@ -49,6 +51,15 @@ public class Application {
 					
 					//new Thread(new WebServer(8080, net)).start();
 					SparkServer web = new SparkServer(net);
+					
+					if (Desktop.isDesktopSupported()) {
+					    try {
+							Desktop.getDesktop().browse(new URI("http://localhost:4567"));
+						} catch (URISyntaxException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 					
 					//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
 					//new NativeDiscovery().discover();
