@@ -156,28 +156,31 @@ public class Network {
 			//open a connection to this peer
 			IPeer peer = peerManager.openConnection(peerInfo.getPeerId());
 			
-			//find all the peers it knows about
-			Set<PeerInfo> knownPeers = peer.requestKnownPeers();
-			
-			//register them
-			tracker.registerPeers(knownPeers);
-			
-			System.out.println("Got known peers from: " + peerInfo.getPeerId());
-			
-			//register it's files
-			tracker.registerFiles(peerInfo.getPeerId(), peer.requestAvailableFiles());
-			
-			System.out.println("Got known files from: " + peerInfo.getPeerId());
-			
-			if (depth < MAX_TRAVERSAL_DEPTH) {
-				//apply the same operation to all the peers it knows about
-				for (PeerInfo pi:knownPeers) {
-					//only look at a peer again if we haven't connected to it before
-					if (!traversed.contains(pi.getPeerId())) {
-						//recursively traverse the tree
-						traverse(pi, depth + 1);
-					} else {
-						System.out.println("Reached maximum traversal depth");
+			if (peer != null) {
+				
+				//find all the peers it knows about
+				Set<PeerInfo> knownPeers = peer.requestKnownPeers();
+				
+				//register them
+				tracker.registerPeers(knownPeers);
+				
+				System.out.println("Got known peers from: " + peerInfo.getPeerId());
+				
+				//register it's files
+				tracker.registerFiles(peerInfo.getPeerId(), peer.requestAvailableFiles());
+				
+				System.out.println("Got known files from: " + peerInfo.getPeerId());
+				
+				if (depth < MAX_TRAVERSAL_DEPTH) {
+					//apply the same operation to all the peers it knows about
+					for (PeerInfo pi:knownPeers) {
+						//only look at a peer again if we haven't connected to it before
+						if (!traversed.contains(pi.getPeerId())) {
+							//recursively traverse the tree
+							traverse(pi, depth + 1);
+						} else {
+							System.out.println("Reached maximum traversal depth");
+						}
 					}
 				}
 			}
@@ -402,13 +405,18 @@ public class Network {
 		//IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
 		IPeer peer = peerManager.openConnection(peerId);
 		
-		System.out.println("Uploading block: " + fileId + ":" + block.getIndex());
-		peer.sendBlock(fileId, block);
+		if (peer != null) {
 		
-		long time = System.currentTimeMillis() - startTime;
-		
-		System.out.println("Upload for " + fileId + ":" + block.getIndex() + " took " + 
-				time + "ms " + ((double)time)/block.getContent().length + "B/ms");
+			System.out.println("Uploading block: " + fileId + ":" + block.getIndex());
+			peer.sendBlock(fileId, block);
+			
+			long time = System.currentTimeMillis() - startTime;
+			
+			System.out.println("Upload for " + fileId + ":" + block.getIndex() + " took " + 
+					time + "ms " + ((double)time)/block.getContent().length + "B/ms");
+		} else {
+			throw new IOException("Error connecting to peer: " + peerId);
+		}
 	}
 	
 	/**

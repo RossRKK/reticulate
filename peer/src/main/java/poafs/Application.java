@@ -52,8 +52,8 @@ public class Application {
 					
 					//NativeLibrary.addSearchPath("vlc", "/usr/lib/vlc");
 					//new NativeDiscovery().discover();
-					/*Worker w = new Worker(net);
-					new Thread(w).start();*/
+					Worker w = new Worker(net);
+					new Thread(w).start();
 			        
 					ui();
 				} catch (ProtocolException | CipherException e) {

@@ -43,24 +43,33 @@ public class PeerManager implements Runnable {
 	/**
 	 * Open a connection to a peer. Reuse an existing one if possible.
 	 * @param peerId The id of the peer to connect to.
-	 * @return That peers object.
+	 * @return That peers object, null if the connection failed.
 	 * @throws UnknownHostException
 	 * @throws ProtocolException
 	 * @throws IOException
 	 */
 	public IPeer openConnection(String peerId) throws UnknownHostException, ProtocolException, IOException {
+		try {
 		IPeer connected = connectedPeers.get(peerId);
-		
-		if (connected != null) {
-			return connected;
-		} else {
-			InetSocketAddress addr = t.getHostForPeer(peerId);
 			
-			NetworkPeer p =  new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm, this);
-			
-			connectedPeers.put(peerId, p);
-			
-			return p;
+			if (connected != null) {
+				return connected;
+			} else {
+				InetSocketAddress addr = t.getHostForPeer(peerId);
+				
+				//limit socket connection timeout
+				Socket s = new Socket();
+				s.connect(addr, 1000);
+				
+				NetworkPeer p =  new NetworkPeer(s, t, fm, this);
+				
+				connectedPeers.put(peerId, p);
+				
+				return p;
+			}
+		} catch (ProtocolException | IOException e) {
+			System.err.println("Failed to connect to: " + peerId);
+			return null;
 		}
 	}
 	

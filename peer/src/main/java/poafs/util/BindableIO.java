@@ -81,6 +81,15 @@ public class BindableIO implements Runnable {
 	 */
 	public String nextLine(String id) {
 		try {
+			//wait for the bind ids to match
+			
+			//wait for a line to be read
+			while (shouldWaitForLine) {
+				synchronized (lineWaiter) {
+					lineWaiter.wait();
+				}
+			}
+			
 			synchronized (bindWaiter) {
 				//wait for the bind ids to match
 				while (bindId != id) {
@@ -88,19 +97,14 @@ public class BindableIO implements Runnable {
 				}
 			}
 			
+			//get the line
+			String line = this.line;
+			
+			//tell the reader thread to read the next line
 			synchronized (in) {
 				in.notifyAll();
 			}
 			
-			
-			while (shouldWaitForLine) {
-				synchronized (lineWaiter) {
-					lineWaiter.wait();
-				}
-			}
-			
-			
-			String line = this.line;
 			//String line = in.nextLine();
 			shouldWaitForLine = true;
 			
