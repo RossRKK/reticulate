@@ -50,7 +50,7 @@ public class PeerManager implements Runnable {
 	 */
 	public IPeer openConnection(String peerId) throws UnknownHostException, ProtocolException, IOException {
 		try {
-		IPeer connected = connectedPeers.get(peerId);
+			IPeer connected = connectedPeers.get(peerId);
 			
 			if (connected != null) {
 				return connected;
@@ -69,6 +69,8 @@ public class PeerManager implements Runnable {
 			}
 		} catch (ProtocolException | IOException e) {
 			System.err.println("Failed to connect to: " + peerId);
+			//remove the peer from the tracker
+			t.removePeer(peerId);
 			return null;
 		}
 	}

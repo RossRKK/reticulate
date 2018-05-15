@@ -43,6 +43,7 @@ import poafs.file.tracking.FileInfo;
 import poafs.file.tracking.ITracker;
 import poafs.file.tracking.NetTracker;
 import poafs.file.tracking.PeerInfo;
+import poafs.file.tracking.Worker;
 import poafs.lib.Reference;
 import poafs.local.PropertiesManager;
 import poafs.peer.IPeer;
@@ -94,6 +95,9 @@ public class Network {
 		
 		//start the local server
 		new Thread(peerManager).start();
+		
+		Worker w = new Worker(this, fileManager, tracker, Reference.DEFAULT_REDUNDANCY);
+		new Thread(w).start();
 		
 		try {
 			startTraversal();
@@ -157,7 +161,6 @@ public class Network {
 			IPeer peer = peerManager.openConnection(peerInfo.getPeerId());
 			
 			if (peer != null) {
-				
 				//find all the peers it knows about
 				Set<PeerInfo> knownPeers = peer.requestKnownPeers();
 				
@@ -423,9 +426,10 @@ public class Network {
 	 * Upload a block to a random peer.
 	 * @param fileId The id of the file the block is in.
 	 * @param block The block to upload
+	 * @return The id of the peer it was uploaded to.
 	 * @throws NoValidPeersException
 	 */
-	private void uploadBlockRandomly(String fileId, FileBlock block) throws NoValidPeersException {
+	public String uploadBlockRandomly(String fileId, FileBlock block) throws NoValidPeersException {
 		Random r = new Random();
 		Set<String> peers = tracker.getPeers().keySet();
 		
@@ -442,7 +446,7 @@ public class Network {
 				
 				uploadBlockToPeer(peerId, fileId, block);
 				
-				return;
+				return peerId;
 			} catch (IOException e) {
 				System.err.println(peerId + " was unreachable");
 				

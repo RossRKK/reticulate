@@ -20,4 +20,6 @@ public class Reference {
 	public static final String RSA_CIPHER = "RSA";
 	
 	public static final String AES_CIPHER = "AES";
+
+	public static final int DEFAULT_REDUNDANCY = 2;
 }

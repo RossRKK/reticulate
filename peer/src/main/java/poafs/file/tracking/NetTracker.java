@@ -93,4 +93,9 @@ public class NetTracker implements ITracker {
 		}
 	}
 
+	@Override
+	public void removePeer(String peerId) {
+		peers.remove(peerId);
+	}
+
 }

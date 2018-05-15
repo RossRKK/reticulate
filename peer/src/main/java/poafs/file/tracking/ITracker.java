@@ -54,4 +54,6 @@ public interface ITracker {
 	public void registerPeers(Collection<PeerInfo> knownPeers);
 
 	public void registerFiles(String peerId, Map<String, List<Integer>> availableFiles);
+
+	public void removePeer(String peerId);
 }
