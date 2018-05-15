@@ -64,9 +64,33 @@ var Model = (function () {
         });
     }
 
+    function copyToClipboard (str) {
+        const el = document.createElement('textarea');
+        el.value = str;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    }
+
+    function copyPeer() {
+        copyToClipboard(peerId);
+    }
+
+    function copyAddr() {
+        copyToClipboard(addr);
+    }
+
+    function copyKey() {
+        copyToClipboard(key);
+    }
+
     return {
         init,
         updateFileId,
+        copyPeer,
+        copyAddr,
+        copyKey,
     }
 })();
 
@@ -145,6 +169,11 @@ var Controller = (function () {
     function init() {
         //register event handlers
         $("#file-id-in").on("change keypress", handleFileId);
+
+        //copy buttons
+        $("#copy-peer").on("click", Model.copyPeer);
+        $("#copy-addr").on("click", Model.copyAddr);
+        $("#copy-key").on("click", Model.copyKey);
     }
 
     function handleFileId(e) {
