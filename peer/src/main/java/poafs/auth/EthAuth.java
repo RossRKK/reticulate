@@ -92,7 +92,7 @@ public class EthAuth implements IAuthenticator {
 			return contract.getAccessLevel(fileId, user).send().intValueExact();
 		} catch (Exception e) {
 			e.printStackTrace();
-			return -1;
+			return 0;
 		}
 	}
 	

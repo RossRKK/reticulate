@@ -32,7 +32,12 @@ contract ReticulateUsers {
 
     ///turn a username into an actual address
     function getAddressForUserName(string userName) public view returns(address) {
-        return userNames[userName].user;
+        //check uf the username has been registered
+        if (userNames[userName].isTaken) {
+            return userNames[userName].user;
+        } else {
+            return 0;
+        }
     }
 
     function getUserNameForAddress(address addr) public view returns(string) {
@@ -69,10 +74,14 @@ contract ReticulateUsers {
         });
 
         if (!isUserNameTaken(username)) {
+            //relese any previous username
+            userNames[users[msg.sender].userName].isTaken = false;
+
             userNames[username] = UserName({
                 user: msg.sender,
                 isTaken: true
             });
+
             return true;
         } else {
             users[msg.sender].userName = "";

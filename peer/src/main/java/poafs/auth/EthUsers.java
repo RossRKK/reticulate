@@ -82,6 +82,9 @@ public class EthUsers implements IUsers {
 	@Override
 	public boolean registerUser(String username, byte[] pubKey, String rootDir) {
 		try {
+			System.out.println(username);
+			System.out.println(pubKey);
+			System.out.println(rootDir);
 			contract.registerUser(username, pubKey, rootDir).send();
 			return true;
 		} catch (Exception e) {

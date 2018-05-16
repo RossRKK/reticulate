@@ -8,6 +8,8 @@
  * Author: Ross Kelso
 */
 
+const EMPTY_DIR = ".. dir ";
+
 var Reticulate = (function () {
 
     //get the id of the peer
@@ -46,7 +48,7 @@ var Reticulate = (function () {
     //get the contents of a file
     async function getFile(fileId) {
         return await $.ajax({
-            url: "/file/" + fileId,
+            url: "/file/" + encodeURIComponent(fileId),
             method: "GET"
         });
     }
@@ -54,7 +56,7 @@ var Reticulate = (function () {
     //update the contents of a file
     async function updateFile(fileId, content) {
         return await $.ajax({
-            url: "/file/" + fileId,
+            url: "/file/" + encodeURIComponent(fileId),
             method: "PUT",
             data: content
         });
@@ -63,7 +65,7 @@ var Reticulate = (function () {
     //remove a file from the network
     async function deleteFile(fileId) {
         return await $.ajax({
-            url: "/file/" + fileId,
+            url: "/file/" + encodeURIComponent(fileId),
             method: "DELETE"
         });
     }
@@ -71,7 +73,7 @@ var Reticulate = (function () {
     //share a file with someone
     async function share(fileId, userAddress, userKey, accessLevel) {
         return await $.ajax({
-            url: "/file/" + fileId + "/share?userAddress=" + userAddress + "&userKey=" + userKey + "&accessLevel=" + accessLevel,
+            url: "/file/" + encodeURIComponent(fileId) + "/share?userAddress=" + encodeURIComponent(userAddress) + "&userKey=" + encodeURIComponent(userKey) + "&accessLevel=" + encodeURIComponent(accessLevel),
             method: "POST"
         });
     }
@@ -79,7 +81,7 @@ var Reticulate = (function () {
     //get a users access level to a file
     async function getAccess(fileId, userAddress) {
         return await $.ajax({
-            url: "/file/" + fileId + "/share/" + userAddress,
+            url: "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress),
             method: "GET"
         });
     }
@@ -87,7 +89,7 @@ var Reticulate = (function () {
     //revoke a users access to a file
     async function revokeShare(fileId, userAddress) {
         return await $.ajax({
-            url: "/file/" + fileId + "/share/" + userAddress,
+            url: "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress),
             method: "DELETE"
         });
     }
@@ -95,13 +97,88 @@ var Reticulate = (function () {
     //modify a users access level
     async function modifyAccess(fileId, userAddress, accessLevel) {
         return await $.ajax({
-            url: "/file/" + fileId + "/share/" + userAddress + "&accessLevel=" + accessLevel,
+            url: "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress) + "&accessLevel=" + encodeURIComponent(accessLevel),
             method: "PUT"
         });
     }
 
+
+    //functions for handling user requests
+    var Users = (function () {
+
+        //register a new user
+        async function registerUser(username, userKey, rootDir) {
+
+            let taken = await isUserNameTaken(username);
+            if (!taken) {
+                return (await $.ajax({
+                    url: "/user?username=" + encodeURIComponent(username) + "&userKey=" + encodeURIComponent(userKey) + "&rootDir=" + encodeURIComponent(rootDir),
+                    method: "POST"
+                })) == "true";
+            } else {
+                return false;
+            }
+        }
+
+        //register the current user with a username
+        async function registerCurrentUser(username) {
+            let rootDir = await addFile(EMPTY_DIR + "root\n");
+
+            let userKey = await key();
+
+            return registerUser(username, userKey, rootDir);
+        }
+
+        async function getAddressForUserName(username) {
+            return await $.ajax({
+                url: "/user/name/" + encodeURIComponent(username) + "/addr",
+                method: "GET"
+            });
+        }
+
+        async function getUserNameForAddress(addr) {
+            return await $.ajax({
+                url: "/user/addr/" + encodeURIComponent(addr) + "/username",
+                method: "GET"
+            });
+        }
+
+        async function getKeyForUser(nameOrAddr, isAddr) {
+            let path = isAddr ? "/user/addr/" : "/user/name/";
+            return await $.ajax({
+                url: path + encodeURIComponent(nameOrAddr) + "/key",
+                method: "GET"
+            });
+        }
+
+        async function getRootDirForUser(nameOrAddr, isAddr) {
+            let path = isAddr ? "/user/addr/" : "/user/name/";
+            return await $.ajax({
+                url: path + encodeURIComponent(nameOrAddr) + "/rootDir",
+                method: "GET"
+            });
+        }
+
+        async function isUserNameTaken(username) {
+            return (await $.ajax({
+                url: "/user/" + encodeURIComponent(username),
+                method: "GET"
+            })) == "true";
+        }
+
+        return {
+            registerUser,
+            registerCurrentUser,
+            getAddressForUserName,
+            getKeyForUser,
+            getRootDirForUser,
+            isUserNameTaken,
+        }
+    })();
+
     //public exports
     return {
+        Users,
         peerId,
         addr,
         key,

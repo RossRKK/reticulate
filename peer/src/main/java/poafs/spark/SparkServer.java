@@ -5,6 +5,7 @@ import static spark.Spark.get;
 import static spark.Spark.path;
 import static spark.Spark.post;
 import static spark.Spark.put;
+import static spark.Spark.exception;
 import static spark.Spark.staticFiles;
 
 import java.util.Base64;
@@ -30,6 +31,7 @@ public class SparkServer {
 	 */
 	public SparkServer(Network net, IUsers users) {
 		this.net = net;
+		this.users = users;
 		
 		staticFiles.location("/static");
 		
@@ -66,15 +68,32 @@ public class SparkServer {
 		post("/user", registerUser);
 		
 		path("/user", () -> {
-			get("/:username/key", getUserKey);
-			get("/:username/rootDir", getUserRootDir);
-			get("/:username/addr", getUserAddress);
-			get("/:address/username", getUsername);
+			
+			//get stuff by user name
+			path("/name/:username", () -> {
+				get("/key", getUserKeyByName);
+				get("/rootDir", getUserRootDirByName);
+				get("/addr", getUserAddress);
+			});
+			
+			//get stuff by user address
+			path("/addr/:address", () -> {
+				get("/key", getUserKeyByAddr);
+				get("/rootDir", getUserRootDirByAddr);
+				get("/username", getUsername);
+			});
 			
 			get("/:username", isUsernameTaken);
 		});
 		
+		exception(Exception.class, (ex, req, res) -> {
+			System.err.println("Error processing " + req.contextPath());
+		    ex.printStackTrace();
+		});
+		
 	}
+	
+	
 	
 	private Route peerId = (req,res) -> {
 		return Application.getPropertiesManager().getPeerId();
@@ -186,7 +205,7 @@ public class SparkServer {
 	
 	private Route registerUser = (req, res) -> {
 		byte[] key = Base64.getDecoder().decode(req.queryParams("userKey"));
-		return users.registerUser(req.params("username"), key, req.params("rootDir"));
+		return users.registerUser(req.queryParams("username"), key, req.queryParams("rootDir"));
 
 	};
 	
@@ -203,27 +222,19 @@ public class SparkServer {
 	};
 	
 	
-	private Route getUserKey = (req, res) -> {
-		String nameOrAddr = req.params(":username");
-		
-		if (nameOrAddr.startsWith("0x")) {
-			//address
-			return users.getPublicKeyForUser(nameOrAddr);
-		} else {
-			//name
-			return users.getPublicKeyForUserByName(nameOrAddr);
-		}
+	private Route getUserKeyByName = (req, res) -> {
+		return users.getPublicKeyForUser(req.params(":username"));
 	};
 	
-	private Route getUserRootDir = (req, res) -> {
-		String nameOrAddr = req.params(":username");
-		
-		if (nameOrAddr.startsWith("0x")) {
-			//address
-			return users.getRootDirForUser(nameOrAddr);
-		} else {
-			//name
-			return users.getRootDirForUserByName(nameOrAddr);
-		}
+	private Route getUserKeyByAddr = (req, res) -> {
+		return users.getPublicKeyForUser(req.params(":address"));
+	};
+	
+	private Route getUserRootDirByName = (req, res) -> {
+		return users.getRootDirForUser(req.params(":username"));
+	};
+	
+	private Route getUserRootDirByAddr = (req, res) -> {
+		return users.getRootDirForUser(req.params(":address"));
 	};
 }
