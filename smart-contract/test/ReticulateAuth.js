@@ -8,6 +8,7 @@ contract('ReticulateAuth', function(accounts) {
     const fileLength = 1;
     const dummyKey = [0, 1, 2, 3, 4];
     const dummyCheckSum = [0, 1, 2, 3, 4];
+    const dummyCheckSum2 = [4, 3, 2, 1, 0];
 
     const admin = 3;
     const read = 1;
@@ -80,6 +81,8 @@ contract('ReticulateAuth', function(accounts) {
         await reticulateAuth.updateCheckSum(fileId, 0, dummyCheckSum, {from: accounts[0]});
 
         assert.equal(await reticulateAuth.compareCheckSum(fileId, 0, dummyCheckSum), true);
+        //check that a different checksum will return false
+        assert.equal(await reticulateAuth.compareCheckSum(fileId, 0, dummyCheckSum2), false);
     });
 
     it('files should be able to have check sums for blocks', async function () {

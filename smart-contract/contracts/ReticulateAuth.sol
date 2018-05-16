@@ -3,10 +3,6 @@ pragma solidity ^0.4.0;
 
 contract ReticulateAuth {
 
-    /*uint READ = 1;
-    uint WRITE = 2;
-    uint ADMIN = 3;*/
-
     ///the lminimum level considered an admin
     uint private constant ADMIN = 3;
     uint private constant WRITE = 2;
@@ -33,7 +29,7 @@ contract ReticulateAuth {
     ///all of the files on the network
     mapping(string => File) private files;
 
-    ///create a new BallotBox
+    ///create a new ReticulateAuth
     function ReticulateAuth() public {
         owner = msg.sender;
     }
@@ -54,12 +50,18 @@ contract ReticulateAuth {
     }
 
     ///add a file to the contracts register
-    function addFile(string fileId, bytes key, uint length) public {
-        files[fileId] = File({
-            length: length
-        });
+    function addFile(string fileId, bytes key, uint length) public returns(bool) {
+        if (files[fileId].length == 0) {
+            files[fileId] = File({
+                length: length
+            });
 
-        files[fileId].permissions[msg.sender] = Permission(key, ADMIN);
+            files[fileId].permissions[msg.sender] = Permission(key, ADMIN);
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     ///remove a file from the network
@@ -140,8 +142,6 @@ contract ReticulateAuth {
             return false;
         }
     }
-
-
 
     ///destroy the contract
     function destruct() public {

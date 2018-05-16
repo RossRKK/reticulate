@@ -198,6 +198,7 @@ public class EthAuth implements IAuthenticator {
 		}*/
 		byte[] correctSum = getCheckSum(fileId, blockIndex);
 		//doing this locally prevents uncessary execution on the blockchain
+		System.out.println("Checksum has length: " + correctSum.length);
 		if (correctSum.length == checkSum.length) {
 			
 			for (int i = 0; i < correctSum.length; i++) {
