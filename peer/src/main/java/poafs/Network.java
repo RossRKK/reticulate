@@ -83,8 +83,8 @@ public class Network {
 	
 	private PeerManager peerManager;
 	
-	public Network(String path, String pass, String contractAddress) throws ProtocolException, IOException, CipherException {
-		creds = WalletUtils.loadCredentials(pass, path);
+	public Network(Credentials creds, String contractAddress) throws ProtocolException, IOException, CipherException {
+		this.creds = creds;
 		System.out.println(creds.getAddress());
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
 		this.auth = new EthAuth(creds, contractAddress);

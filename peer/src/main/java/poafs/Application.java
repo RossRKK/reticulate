@@ -14,7 +14,11 @@ import java.util.List;
 import java.util.Scanner;
 
 import org.web3j.crypto.CipherException;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
 
+import poafs.auth.EthUsers;
+import poafs.auth.IUsers;
 import poafs.exception.KeyException;
 import poafs.exception.ProtocolException;
 import poafs.file.tracking.FileInfo;
@@ -47,10 +51,13 @@ public class Application {
 			if (pm.loadProperties(configPath)) {
 				System.out.println("Config Loaded");
 				try {
-					net = new Network(pm.getWalletPath(), pm.getWalletPass(), pm.getContractAddress());
+					Credentials creds = WalletUtils.loadCredentials(pm.getWalletPass(), pm.getWalletPath());
+					net = new Network(creds, pm.getContractAddress());
+					
+					IUsers users = new EthUsers(creds, pm.getUserContractAddress());
 					
 					//new Thread(new WebServer(8080, net)).start();
-					SparkServer web = new SparkServer(net);
+					SparkServer web = new SparkServer(net, users);
 					
 					if (Desktop.isDesktopSupported()) {
 					    try {

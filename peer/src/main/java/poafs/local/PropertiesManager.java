@@ -53,6 +53,8 @@ public class PropertiesManager {
 	
 	private String contractAddress;
 	
+	private String userContractAddress;
+	
 	/**
 	 * The properties object.
 	 */
@@ -82,6 +84,7 @@ public class PropertiesManager {
 			walletPath = prop.getProperty("walletPath");
 			walletPass = prop.getProperty("walletPass");
 			contractAddress = prop.getProperty("contractAddress");
+			userContractAddress = prop.getProperty("userContractAddress");
 			
 			success = true;
 			
@@ -137,6 +140,9 @@ public class PropertiesManager {
 			
 			contractAddress = "0xb8733F478bfd755BFBdc50fD2e16FC82245976B7";
 			prop.setProperty("contractAddress", contractAddress);
+			
+			userContractAddress = "0xCac3310E1f639262e4bFF7a1D891740e94e847Bf";
+			prop.setProperty("userContractAddress", userContractAddress);
 
 			
 			createWallet();
@@ -229,5 +235,9 @@ public class PropertiesManager {
 
 	public String getContractAddress() {
 		return contractAddress;
+	}
+
+	public String getUserContractAddress() {
+		return userContractAddress;
 	}
 }

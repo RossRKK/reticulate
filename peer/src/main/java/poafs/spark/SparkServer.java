@@ -1,33 +1,34 @@
 package poafs.spark;
 
+import static spark.Spark.delete;
 import static spark.Spark.get;
+import static spark.Spark.path;
 import static spark.Spark.post;
 import static spark.Spark.put;
 import static spark.Spark.staticFiles;
 
 import java.util.Base64;
 
-import static spark.Spark.delete;
-import static spark.Spark.path;
-
 import javax.servlet.http.HttpServletResponse;
 
 import poafs.Application;
 import poafs.Network;
 import poafs.PoafsFileStream;
+import poafs.auth.IUsers;
 import poafs.lib.Reference;
-import poafs.local.PropertiesManager;
 import spark.Route;
 
 public class SparkServer {
 	
 	private Network net;
+	
+	private IUsers users;
 
 	/**
 	 * Create a spark server.
 	 * @param net The reticulate network object.
 	 */
-	public SparkServer(Network net) {
+	public SparkServer(Network net, IUsers users) {
 		this.net = net;
 		
 		staticFiles.location("/static");
@@ -60,6 +61,17 @@ public class SparkServer {
 				
 				put("/:userAddress", modifyAccess);
 			});
+		});
+		
+		post("/user", registerUser);
+		
+		path("/user", () -> {
+			get("/:username/key", getUserKey);
+			get("/:username/rootDir", getUserRootDir);
+			get("/:username/addr", getUserAddress);
+			get("/:address/username", getUsername);
+			
+			get("/:username", isUsernameTaken);
 		});
 		
 	}
@@ -167,5 +179,51 @@ public class SparkServer {
 			return "Malformed access level";
 		}
 	};
+	
+	/**
+	 ** User Routes
+	 **/
+	
+	private Route registerUser = (req, res) -> {
+		byte[] key = Base64.getDecoder().decode(req.queryParams("userKey"));
+		return users.registerUser(req.params("username"), key, req.params("rootDir"));
 
+	};
+	
+	private Route getUsername = (req, res) -> {
+		return users.getUserNameForAddress(req.params(":address"));
+	};
+	
+	private Route getUserAddress = (req, res) -> {
+		return users.getAddressForUserName(req.params(":username"));
+	};
+	
+	private Route isUsernameTaken = (req, res) -> {
+		return users.isUserNameTaken(req.params(":username"));
+	};
+	
+	
+	private Route getUserKey = (req, res) -> {
+		String nameOrAddr = req.params(":username");
+		
+		if (nameOrAddr.startsWith("0x")) {
+			//address
+			return users.getPublicKeyForUser(nameOrAddr);
+		} else {
+			//name
+			return users.getPublicKeyForUserByName(nameOrAddr);
+		}
+	};
+	
+	private Route getUserRootDir = (req, res) -> {
+		String nameOrAddr = req.params(":username");
+		
+		if (nameOrAddr.startsWith("0x")) {
+			//address
+			return users.getRootDirForUser(nameOrAddr);
+		} else {
+			//name
+			return users.getRootDirForUserByName(nameOrAddr);
+		}
+	};
 }
