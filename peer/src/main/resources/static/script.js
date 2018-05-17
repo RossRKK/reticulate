@@ -27,19 +27,52 @@ var Model = (function () {
     //the access level to the current file id
     let accessLevel;
 
+    //the assigned username for the current user
+    let username;
+
+    //the registered root directory for the current user.
+    let rootDir;
+
+
+    //the directory object for the current dir
+    let currentDir;
+
     function init() {
-        Reticulate.peerId().then(function (result) {
+        Reticulate.Peer.peerId().then(function (result) {
             peerId = result;
             View.setPeerId(peerId);
         });
-        Reticulate.addr().then(function (result) {
+        Reticulate.Peer.addr().then(function (result) {
             addr = result;
             View.setUserAddress(addr);
+
+            //get the users username
+            Reticulate.Users.getUserNameForAddress(addr).then(function (result) {
+                username = result;
+                View.setUsername(result);
+            });
+            //get the users root dir
+            Reticulate.Users.getRootDirForUser(addr, true).then(async function (result) {
+                rootDir = result;
+
+                View.setRootDir(rootDir);
+
+                let dirContent = await Reticulate.Net.getFile(rootDir);
+
+                currentDir = new Reticulate.Directory.dir(rootDir, dirContent);
+
+                View.clearDirectroyEntries();
+
+                //update the view with the contents of the current directory
+                currentDir.entries.forEach(View.addDirectroyEntry);
+            });
         });
-        Reticulate.key().then(function (result) {
+        Reticulate.Peer.key().then(function (result) {
             key = result;
             View.setPublicKey(key);
         });
+
+
 
         updateFileId(fileId);
     }
@@ -48,7 +81,7 @@ var Model = (function () {
     async function updateFileId(id) {
         fileId = id;
 
-        request = Reticulate.getAccess(fileId, addr);
+        request = Reticulate.Net.getAccess(fileId, addr);
 
         request.then(function (strLevel) {
             accessLevel = parseInt(strLevel);
@@ -155,12 +188,88 @@ var View = (function () {
         document.getElementById("file-download").href = "/file/" + fileId;
     }
 
+    function setUsername(username) {
+        $("#username").text(username);
+    }
+
+    function setRootDir(rootDir) {
+        $("#rootDir").text(rootDir);
+    }
+
+    function addDirectroyEntry(entry) {
+        /*<div class="list-group-item list-group-item-action">
+            <div class="row">
+                <div class="col-1"><i class="far fa-folder"></i></div>
+                <div class="col-8">Example File</div>
+                <div class="col-1"><i class="icon fa fa-edit"></i></div>
+                <div class="col-1"><i class="icon fa fa-share-square"></i></div>
+                <div class="col-1"><i class="icon fa fa-cog"></i></div>
+            </div>
+        </div>*/
+
+        let listItem = $("<div>", {
+            id: "dir-entry-" + entry.id,
+            class: "list-group-item list-group-item-action",
+        });
+        listItem.on("click", function () {
+            //TODO
+        });
+
+        $("#dir-entries").append(listItem);
+
+        let row = $("<div>", {
+            class: "row",
+        });
+
+        listItem.append(row);
+
+        //function for making icons
+        function makeIcon(faIcon) {
+            let iconCol = $("<div>", {
+                class: "col-1",
+            });
+
+            let icon = $("<i>", {
+                class: faIcon,
+            });
+
+            iconCol.append(icon);
+
+            return iconCol;
+        }
+
+        row.append(makeIcon("far " + (entry.type === "dir" ? "fa-folder" : "fa-file")));
+
+        let nameCol = $("<div>", {
+            class: "col-8",
+        });
+
+        row.append(nameCol);
+
+        let name = $("<div>");
+        name.text(entry.name);
+
+        nameCol.append(name);
+
+        row.append(makeIcon("icon fa fa-edit"));
+        row.append(makeIcon("icon fa fa-share-square"));
+        row.append(makeIcon("icon fa fa-cog"));
+    }
+
+    function clearDirectroyEntries() {
+        $("#dir-entries").empty();
+    }
+
     return {
         setPeerId,
         setUserAddress,
         setPublicKey,
         updateAccess,
         updateFileId,
+        setRootDir,
+        setUsername,
+        addDirectroyEntry,
+        clearDirectroyEntries,
     }
 })();
 

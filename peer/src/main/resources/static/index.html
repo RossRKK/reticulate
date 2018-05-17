@@ -33,6 +33,30 @@
             </div>
             <hr>
             <div class="row">
+                <div class="col-1"><i class="fas fa-lg fa-user"></i></div>
+                <div class="col-5" id="username">Loading...</div>
+                <div class="col-1"><i class="fas fa-lg fa-folder"></i></div>
+                <div class="col-5" id="rootDir">Loading...</div>
+            </div>
+
+            <hr>
+
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item active" aria-current="page"><i class="far fa-hdd"></i></li>
+                    </ol>
+                </nav>
+                <div class="list-group" id="dir-entries">
+                    <div class="list-group-item list-group-item-action">
+                        <i class="fas fa-lg fa-spin fa-spinner" style="margin: 0 auto"></i>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
                 <div class="col-3"><h3>Peer ID:</h3></div>
                 <div class="col-1"><i id="copy-peer" class="icon far fa-lg fa-copy"></i></div>
 
@@ -62,6 +86,30 @@
                         <div id="file-write" class="col-3 file-action"><i class="icon fa fa-2x fa-edit"></i></div>
                         <div id="file-share" class="col-3 file-action"><i class="icon fa fa-2x fa-share-square"></i></div>
                         <div id="file-settings" class="col-3 file-action"><i class="icon fa fa-2x fa-cog"></i></div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+              Launch demo modal
+            </button>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save changes</button>
                     </div>
                 </div>
             </div>
