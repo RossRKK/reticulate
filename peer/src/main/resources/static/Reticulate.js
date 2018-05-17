@@ -170,6 +170,7 @@ var Reticulate = (function () {
             registerUser,
             registerCurrentUser,
             getAddressForUserName,
+            getUserNameForAddress,
             getKeyForUser,
             getRootDirForUser,
             isUserNameTaken,

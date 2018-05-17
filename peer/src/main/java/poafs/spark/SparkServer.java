@@ -223,15 +223,27 @@ public class SparkServer {
 	
 	
 	private Route getUserKeyByName = (req, res) -> {
-		return users.getPublicKeyForUser(req.params(":username"));
+		byte[] key = users.getPublicKeyForUserByName(req.params(":username"));
+		
+		if (key != null) {
+			return Base64.getEncoder().encodeToString(key);
+		} else {
+			return null;
+		}
 	};
 	
 	private Route getUserKeyByAddr = (req, res) -> {
-		return users.getPublicKeyForUser(req.params(":address"));
+		byte[] key =  users.getPublicKeyForUser(req.params(":address"));
+		
+		if (key != null) {
+			return Base64.getEncoder().encodeToString(key);
+		} else {
+			return null;
+		}
 	};
 	
 	private Route getUserRootDirByName = (req, res) -> {
-		return users.getRootDirForUser(req.params(":username"));
+		return users.getRootDirForUserByName(req.params(":username"));
 	};
 	
 	private Route getUserRootDirByAddr = (req, res) -> {
