@@ -57,15 +57,20 @@ public class PeerManager implements Runnable {
 			} else {
 				InetSocketAddress addr = t.getHostForPeer(peerId);
 				
-				//limit socket connection timeout
-				Socket s = new Socket();
-				s.connect(addr, 1000);
-				
-				NetworkPeer p =  new NetworkPeer(s, t, fm, this);
-				
-				connectedPeers.put(peerId, p);
-				
-				return p;
+				if (addr != null) {
+					
+					//limit socket connection timeout
+					Socket s = new Socket();
+					s.connect(addr, 1000);
+					
+					NetworkPeer p =  new NetworkPeer(s, t, fm, this);
+					
+					connectedPeers.put(peerId, p);
+					
+					return p;
+				} else {
+					return null;
+				}
 			}
 		} catch (ProtocolException | IOException e) {
 			System.err.println("Failed to connect to: " + peerId);

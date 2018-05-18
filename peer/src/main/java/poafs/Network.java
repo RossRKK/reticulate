@@ -401,9 +401,7 @@ public class Network {
 	private void uploadBlockToPeer(String peerId, String fileId, FileBlock block) throws IOException, ProtocolException {
 		long startTime = System.currentTimeMillis();
 		
-		InetSocketAddress addr = tracker.getHostForPeer(peerId);
-		
-		System.out.println("Uploading to " + peerId + " at " + addr.getHostName());
+		System.out.println("Uploading to " + peerId);
 		//get the block off of the peer
 		//IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
 		IPeer peer = peerManager.openConnection(peerId);

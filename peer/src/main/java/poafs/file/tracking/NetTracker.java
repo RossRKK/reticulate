@@ -27,7 +27,11 @@ public class NetTracker implements ITracker {
 
 	@Override
 	public InetSocketAddress getHostForPeer(String peerId) {
-		return peers.get(peerId).getAddr();
+		if (peers.get(peerId) != null) {
+			return peers.get(peerId).getAddr();
+		} else {
+			return null;
+		}
 	}
 
 	@Override
