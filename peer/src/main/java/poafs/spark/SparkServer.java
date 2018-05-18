@@ -1,13 +1,16 @@
 package poafs.spark;
 
 import static spark.Spark.delete;
+import static spark.Spark.exception;
 import static spark.Spark.get;
 import static spark.Spark.path;
 import static spark.Spark.post;
 import static spark.Spark.put;
-import static spark.Spark.exception;
 import static spark.Spark.staticFiles;
 
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Base64;
 
 import javax.servlet.http.HttpServletResponse;
@@ -89,6 +92,15 @@ public class SparkServer {
 		exception(Exception.class, (ex, req, res) -> {
 			System.err.println("Error processing " + req.contextPath());
 		    ex.printStackTrace();
+		    
+		    res.status(500);
+		    
+		    ByteArrayOutputStream out = new ByteArrayOutputStream();
+		    
+		    ex.printStackTrace(new PrintStream(out));
+		    
+		    
+		    res.body(new String((out.toByteArray())));
 		});
 		
 	}
@@ -140,7 +152,7 @@ public class SparkServer {
 	 */
 	private Route addFile = (req, res) -> {
 		//register the file with the network
-		return net.registerFile(req.bodyAsBytes());
+		return net.registerFile(Base64.getDecoder().decode(req.body()));
 	};
 	
 	/**

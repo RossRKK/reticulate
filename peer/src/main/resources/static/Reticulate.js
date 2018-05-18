@@ -62,6 +62,7 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file",
                 method: "POST",
+                contentType: "application/base64",
                 data: content
             });
         }

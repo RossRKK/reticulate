@@ -320,7 +320,7 @@ public class Network {
 			
 			new Thread(updateAndUpload).start();
 		}
-		System.out.println("Checksums updated");
+		System.out.println("Checksum update transactions sent");
 		
 		return id;
 	}

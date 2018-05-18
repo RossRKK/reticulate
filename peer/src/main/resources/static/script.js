@@ -147,7 +147,10 @@ var Model = (function () {
         reader.onload = async function (event) {
             console.log(event.target.result);
 
-            let fileId = await Reticulate.Net.addFile(new Int8Array(event.target.result));
+            //let fileId = await Reticulate.Net.addFile(new Uint8Array(event.target.result));
+            let content = event.target.result.split(',')[1]; //remove data:*/*;base64
+            let fileId = await Reticulate.Net.addFile(content);
+            //let fileId = await Reticulate.Net.addFile(event.target.result);
             console.log("File ID: " + fileId);
 
             let entry = new Reticulate.Directory.entry(file.name, FILE, fileId);
@@ -156,7 +159,9 @@ var Model = (function () {
             View.displayDirectory(currentDir);
         };
 
-        reader.readAsArrayBuffer(file);
+        //reader.readAsBinaryString(file);
+        //reader.readAsArrayBuffer(file);
+        reader.readAsDataURL(file);
     }
 
     return {
