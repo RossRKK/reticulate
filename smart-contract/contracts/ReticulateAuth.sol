@@ -15,6 +15,9 @@ contract ReticulateAuth {
         mapping(address => Permission) permissions;
         //the sha256 checksums for specified blocks (optional)
         mapping(uint => bytes) checkSums;
+
+        //track whether this file is registered (to prevent it from being registered twice)
+        bool isRegistered;
     }
 
     //represents a users Permission on a file
@@ -51,9 +54,10 @@ contract ReticulateAuth {
 
     ///add a file to the contracts register
     function addFile(string fileId, bytes key, uint length) public returns(bool) {
-        if (files[fileId].length == 0) {
+        if (!files[fileId].isRegistered) {
             files[fileId] = File({
-                length: length
+                length: length,
+                isRegistered: true
             });
 
             files[fileId].permissions[msg.sender] = Permission(key, ADMIN);

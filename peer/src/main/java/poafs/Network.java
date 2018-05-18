@@ -368,7 +368,7 @@ public class Network {
 				}
 				System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
 			};
-			
+
 			new Thread(updateAndUpload).start();
 		}
 	}

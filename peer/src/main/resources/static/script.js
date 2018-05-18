@@ -4,6 +4,11 @@ const READ = 1;
 const WRITE = 2;
 const ADMIN = 3;
 
+const FILE_PATH = "/file/";
+
+const DIR = "dir";
+const FILE = "file";
+
 $(function () {
     Model.init();
     Controller.init();
@@ -33,9 +38,11 @@ var Model = (function () {
     //the registered root directory for the current user.
     let rootDir;
 
-
     //the directory object for the current dir
     let currentDir;
+
+    //the list of entries we went through to get here
+    let breadCrumbs = [];
 
     function init() {
         Reticulate.Peer.peerId().then(function (result) {
@@ -57,14 +64,7 @@ var Model = (function () {
 
                 View.setRootDir(rootDir);
 
-                let dirContent = await Reticulate.Net.getFile(rootDir);
-
-                currentDir = new Reticulate.Directory.dir(rootDir, dirContent);
-
-                View.clearDirectroyEntries();
-
-                //update the view with the contents of the current directory
-                currentDir.entries.forEach(View.addDirectroyEntry);
+                openDirectory(rootDir);
             });
         });
         Reticulate.Peer.key().then(function (result) {
@@ -118,12 +118,55 @@ var Model = (function () {
         copyToClipboard(key);
     }
 
+    //open an entry in the
+    function openEntry(entry) {
+        if (entry.type === DIR) {
+            breadCrumbs.push(entry);
+
+            openDirectory(entry.id);
+        } else {
+            //download the file
+            window.open(Reticulate.Net.getDomain() + FILE_PATH + entry.id);
+        }
+    }
+
+    //open a directory
+    async function openDirectory(dirId) {
+        if (dirId !== "") {
+            let dirContent = await Reticulate.Net.getFile(dirId);
+
+            currentDir = new Reticulate.Directory.dir(dirId, dirContent);
+
+            View.displayDirectory(currentDir);
+        }
+    }
+
+    function addFileEntry(file) {
+        let reader = new FileReader();
+
+        reader.onload = async function (event) {
+            console.log(event.target.result);
+
+            let fileId = await Reticulate.Net.addFile(new Int8Array(event.target.result));
+            console.log("File ID: " + fileId);
+
+            let entry = new Reticulate.Directory.entry(file.name, FILE, fileId);
+            currentDir.addEntry(entry);
+
+            View.displayDirectory(currentDir);
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
     return {
         init,
         updateFileId,
         copyPeer,
         copyAddr,
         copyKey,
+        openEntry,
+        addFileEntry,
     }
 })();
 
@@ -196,6 +239,43 @@ var View = (function () {
         $("#rootDir").text(rootDir);
     }
 
+    //function for making icons
+    function makeIconCol(faIcon) {
+        let iconCol = $("<div>", {
+            class: "col-1",
+        });
+
+        iconCol.append(makeIcon(faIcon));
+
+        return iconCol;
+    }
+
+    function makeIcon(faIcon) {
+        return $("<i>", {
+            class: faIcon,
+        });
+    }
+
+    function displayDirectory(dir) {
+        clearDirectroyEntries();
+
+        //update the view with the contents of the current directory
+        dir.entries.forEach(addDirectroyEntry);
+
+        /*<div class="list-group-item list-group-item-action centered">
+            <i class="fas fa-lg fa-plus"></i>
+        </div>*/
+        let listItem = $("<div>", {
+            class: "list-group-item centered",
+        });
+        listItem.append(makeIcon("fas fa-lg fa-plus"));
+
+        listItem.on("dragover", Controller.dragOverHandler);
+        listItem.on("drop", Controller.dropHandler);
+
+        $("#dir-entries").append(listItem);
+    }
+
     function addDirectroyEntry(entry) {
         /*<div class="list-group-item list-group-item-action">
             <div class="row">
@@ -209,10 +289,16 @@ var View = (function () {
 
         let listItem = $("<div>", {
             id: "dir-entry-" + entry.id,
+            "data-id": entry.id,
+            "data-type": entry.type,
+            "data-name": entry.name,
             class: "list-group-item list-group-item-action",
         });
-        listItem.on("click", function () {
-            //TODO
+
+        listItem.on("click", function (e) {
+            //open the clicked entry
+            let entry = new Reticulate.Directory.entry(e.currentTarget.dataset.name, e.currentTarget.dataset.type, e.currentTarget.dataset.id)
+            Model.openEntry(entry);
         });
 
         $("#dir-entries").append(listItem);
@@ -223,22 +309,7 @@ var View = (function () {
 
         listItem.append(row);
 
-        //function for making icons
-        function makeIcon(faIcon) {
-            let iconCol = $("<div>", {
-                class: "col-1",
-            });
-
-            let icon = $("<i>", {
-                class: faIcon,
-            });
-
-            iconCol.append(icon);
-
-            return iconCol;
-        }
-
-        row.append(makeIcon("far " + (entry.type === "dir" ? "fa-folder" : "fa-file")));
+        row.append(makeIconCol("far " + (entry.type === DIR ? "fa-folder" : "fa-file")));
 
         let nameCol = $("<div>", {
             class: "col-8",
@@ -251,9 +322,11 @@ var View = (function () {
 
         nameCol.append(name);
 
-        row.append(makeIcon("icon fa fa-edit"));
-        row.append(makeIcon("icon fa fa-share-square"));
-        row.append(makeIcon("icon fa fa-cog"));
+        if (entry.type !== DIR) {
+            row.append(makeIconCol("icon fa fa-edit"));
+        }
+        row.append(makeIconCol("icon fa fa-share-square"));
+        row.append(makeIconCol("icon fa fa-cog"));
     }
 
     function clearDirectroyEntries() {
@@ -268,8 +341,7 @@ var View = (function () {
         updateFileId,
         setRootDir,
         setUsername,
-        addDirectroyEntry,
-        clearDirectroyEntries,
+        displayDirectory,
     }
 })();
 
@@ -289,7 +361,52 @@ var Controller = (function () {
         Model.updateFileId($("#file-id-in").val());
     }
 
+    function dropHandler(e) {
+        e = e.originalEvent;
+        console.log(e);
+
+        // Prevent default behavior (Prevent file from being opened)
+        e.preventDefault();
+
+        if (e.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the file(s)
+            for (var i = 0; i < e.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (e.dataTransfer.items[i].kind === 'file') {
+                    var file = e.dataTransfer.items[i].getAsFile();
+
+                    Model.addFileEntry(file);
+                }
+            }
+        } else {
+            // Use DataTransfer interface to access the file(s)
+            for (var i = 0; i < e.dataTransfer.files.length; i++) {
+                Model.addFile(e.dataTransfer.files[i]);
+            }
+        }
+
+        // Pass event to removeDragData for cleanup
+        removeDragData(e)
+    }
+
+    function removeDragData(e) {
+
+        if (e.dataTransfer.items) {
+            // Use DataTransferItemList interface to remove the drag data
+            e.dataTransfer.items.clear();
+        } else {
+            // Use DataTransfer interface to remove the drag data
+            e.dataTransfer.clearData();
+        }
+    }
+
+    function dragOverHandler(e) {
+        e.preventDefault();
+    }
+
     return {
         init,
+        dropHandler,
+        dragOverHandler,
     }
 })();

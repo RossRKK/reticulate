@@ -8,7 +8,7 @@
  * Author: Ross Kelso
 */
 
-const ROOT_DIR = "../dir/root\n";
+const ROOT_DIR = "../dir/\n";
 
 var Reticulate = (function () {
 
@@ -16,6 +16,10 @@ var Reticulate = (function () {
 
     function setDomain(d) {
         domain = d;
+    }
+
+    function getDomain() {
+        return domain;
     }
 
     //module for handling the peer
@@ -128,6 +132,8 @@ var Reticulate = (function () {
             getAccess,
             revokeShare,
             modifyAccess,
+            setDomain,
+            getDomain,
         }
     })();
 
@@ -228,7 +234,7 @@ var Reticulate = (function () {
 
             //add a new directory or file to this directory
             addEntry(entry) {
-                if (getFileId(entry.name) == null) {
+                if (this.getFileId(entry.name) == null) {
                     this.entries.push(entry);
                     this.content += entry.text;
 
@@ -243,7 +249,7 @@ var Reticulate = (function () {
             //remove an entry from this directory, this doesn't delete the file
             removeEntry(id) {
                 //remove the entry
-                this.entries = this.enttires.filter(e => e.id !== id);
+                this.entries = this.entries.filter(e => e.id !== id);
 
                 //reset the content
                 this.content = "";

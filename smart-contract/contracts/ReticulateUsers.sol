@@ -73,6 +73,8 @@ contract ReticulateUsers {
             rootDir: rootDir
         });
 
+        //TODO deregister any previosuly existing username
+
         if (!isUserNameTaken(username)) {
             //relese any previous username
             userNames[users[msg.sender].userName].isTaken = false;
