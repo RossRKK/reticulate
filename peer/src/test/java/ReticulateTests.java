@@ -11,10 +11,10 @@ import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 
-import poafs.cryto.KeyStore;
-import poafs.exception.KeyException;
-import poafs.file.EncryptedFileBlock;
-import poafs.file.FileBlock;
+import xyz.reticulate.cryto.KeyStore;
+import xyz.reticulate.exception.KeyException;
+import xyz.reticulate.file.EncryptedFileBlock;
+import xyz.reticulate.file.FileBlock;
 
 public class ReticulateTests {
 	

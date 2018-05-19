@@ -15,13 +15,12 @@ import javax.crypto.SecretKey;
 
 import org.junit.Test;
 
-//import poafs.auth.DummyAuthenticator;
-import poafs.cryto.HybridDecrypter;
-import poafs.cryto.HybridEncrypter;
-import poafs.exception.KeyException;
-import poafs.file.EncryptedFileBlock;
-import poafs.file.FileBlock;
-import poafs.file.PoafsFile;
+import xyz.reticulate.cryto.HybridDecrypter;
+import xyz.reticulate.cryto.HybridEncrypter;
+import xyz.reticulate.exception.KeyException;
+import xyz.reticulate.file.EncryptedFileBlock;
+import xyz.reticulate.file.FileBlock;
+import xyz.reticulate.file.ReticulateFile;
 
 public class Tests {
 	/**
@@ -106,7 +105,7 @@ public class Tests {
 		
 		FileBlock input = new FileBlock(data, 0);
 		
-		PoafsFile file = new PoafsFile("normal");
+		ReticulateFile file = new ReticulateFile("normal");
 		
 		file.addBlock(input);
 		
@@ -125,7 +124,7 @@ public class Tests {
 		
 		EncryptedFileBlock encrypted = e.encrypt(input);
 		
-		PoafsFile file = new PoafsFile("encrypted");
+		ReticulateFile file = new ReticulateFile("encrypted");
 		
 		file.addBlock(encrypted);
 		
