@@ -57,7 +57,7 @@ var Reticulate = (function () {
 
     //module for hadnling the network
     var Net = (function () {
-        //add a file to the network with specified contents
+        //add a file to the network with specified contents (endcoded in base64)
         async function addFile(content) {
             return await $.ajax({
                 url: domain + "/file",
@@ -66,7 +66,7 @@ var Reticulate = (function () {
                 data: content
             });
         }
-
+        
         //get the contents of a file
         async function getFile(fileId) {
             return await $.ajax({
@@ -157,7 +157,7 @@ var Reticulate = (function () {
 
         //register the current user with a username
         async function registerCurrentUser(username) {
-            let rootDir = await Net.addFile(ROOT_DIR);
+            let rootDir = await Net.addFile(btoa(ROOT_DIR));
 
             let userKey = await Peer.key();
 

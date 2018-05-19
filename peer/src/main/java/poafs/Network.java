@@ -160,6 +160,8 @@ public class Network {
 			//open a connection to this peer
 			IPeer peer = peerManager.openConnection(peerInfo.getPeerId());
 			
+			System.out.println("Connected to peer: " + peerInfo.getPeerId());
+			
 			if (peer != null) {
 				//find all the peers it knows about
 				Set<PeerInfo> knownPeers = peer.requestKnownPeers();

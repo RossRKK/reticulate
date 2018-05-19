@@ -152,6 +152,7 @@ public class SparkServer {
 	 */
 	private Route addFile = (req, res) -> {
 		//register the file with the network
+		req.headers("Content-type");
 		return net.registerFile(Base64.getDecoder().decode(req.body()));
 	};
 	
