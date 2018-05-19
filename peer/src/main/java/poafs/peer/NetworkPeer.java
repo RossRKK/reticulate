@@ -81,7 +81,7 @@ public class NetworkPeer implements IPeer {
 			io.println("Reticulate 0.1", bindId);
 			
 			io.println(Application.getPropertiesManager().getPeerId(), bindId);
-			//out.flush();
+			io.flush();
 			
 			//TODO check that protocol versions are compatible
 			String versionDec = io.nextLine(bindId);
@@ -183,6 +183,8 @@ public class NetworkPeer implements IPeer {
 		//out.write(block.getContent());
 		io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
 		
+		io.flush();
+		
 		io.unbind(bindId);
 		//out.flush();
 	}
@@ -203,6 +205,8 @@ public class NetworkPeer implements IPeer {
 			io.println(entry.getKey() + " " + entry.getValue().getAddr().getHostName() + ":" + entry.getValue().getAddr().getPort(), bindId);
 		}
 		
+		io.flush();
+		
 		io.unbind(bindId);
 	}
 	
@@ -211,12 +215,12 @@ public class NetworkPeer implements IPeer {
 	 * Request known peers of the remote peer.
 	 */
 	@Override
-	public synchronized Set<PeerInfo> requestKnownPeers() {
+	public Set<PeerInfo> requestKnownPeers() {
 		String bindId = io.bind();
 		Set<PeerInfo> peers = new HashSet<PeerInfo>();
 		
 		io.println("known-peers", bindId);
-		//out.flush();
+		io.flush();
 		
 		String[] lengthLine = io.nextLine(bindId).split(" ");
 		int length = Integer.parseInt(lengthLine[1]);
@@ -247,7 +251,7 @@ public class NetworkPeer implements IPeer {
 	/**
 	 * Send back a list of available files
 	 */
-	private synchronized void availableFiles() {
+	private void availableFiles() {
 		String bindId = io.bind();
 		//get all the peers we know about
 		Map<String, PoafsFile> files = fm.getAvailableFiles();
@@ -268,6 +272,7 @@ public class NetworkPeer implements IPeer {
 			//print a new line
 			io.println("", bindId);
 		}
+		io.flush();
 		
 		io.unbind(bindId);
 	}
@@ -278,14 +283,14 @@ public class NetworkPeer implements IPeer {
 	 * @throws ProtocolException 
 	 */
 	@Override
-	public synchronized Map<String, List<Integer>> requestAvailableFiles() throws ProtocolException {
+	public Map<String, List<Integer>> requestAvailableFiles() throws ProtocolException {
 		try {
 			String bindId = io.bind();
 			
 			Map<String, List<Integer>> files = new HashMap<String, List<Integer>>();
 			
 			io.println("available-files", bindId);
-			//out.flush();
+			io.flush();
 			
 			String[] lengthLine = io.nextLine(bindId).split(" ");
 			int length = Integer.parseInt(lengthLine[1]);
@@ -327,12 +332,14 @@ public class NetworkPeer implements IPeer {
 	 * @throws ProtocolException 
 	 */
 	@Override
-	public synchronized FileBlock requestBlock(String fileId, int index) throws ProtocolException {
+	public FileBlock requestBlock(String fileId, int index) throws ProtocolException {
 		try {
 			String bindId = io.bind();
 			String request = "fetch " + fileId + ":" + index;
 			
 			io.println(request, bindId);
+			
+			io.flush();
 			
 			FileBlock block = readBlock(index, bindId);
 			
@@ -349,7 +356,7 @@ public class NetworkPeer implements IPeer {
 	 * @return The required block.
 	 * @throws ProtocolException 
 	 */
-	private synchronized FileBlock readBlock(int index, String bindId) throws ProtocolException {
+	private FileBlock readBlock(int index, String bindId) throws ProtocolException {
 		try {
 			//read in the content of the block
 			String content64 = io.nextLine(bindId);
@@ -368,7 +375,7 @@ public class NetworkPeer implements IPeer {
 	 * @param block The file block being sent.
 	 */
 	@Override
-	public synchronized void sendBlock(String fileId, FileBlock block) {
+	public void sendBlock(String fileId, FileBlock block) {
 		String bindId = io.bind();
 		
 		//tell the remote peer which block it's about to recieve
@@ -376,6 +383,8 @@ public class NetworkPeer implements IPeer {
 		
 		//send the block content
 		io.println(Base64.getEncoder().encodeToString(block.getContent()), bindId);
+		
+		io.flush();
 		
 		io.unbind(bindId);
 	}

@@ -65,7 +65,7 @@ public class BindableIO implements Runnable {
 	public void run() {
 		while (in.hasNextLine()) {
 			try {
-				shouldWaitForLine = true;
+				//shouldWaitForLine = true;
 				
 				line = in.nextLine();
 				
@@ -149,9 +149,9 @@ public class BindableIO implements Runnable {
 			out.println(line);
 			
 			file.println("Sent: " + line);
-			file.flush();
+			//file.flush();
 			
-			out.flush();
+			//out.flush();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -176,9 +176,9 @@ public class BindableIO implements Runnable {
 			out.print(line);
 			
 			file.print(line);
-			file.flush();
+			//file.flush();
 			
-			out.flush();
+			//out.flush();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -211,12 +211,18 @@ public class BindableIO implements Runnable {
 		return newBindId;
 	}
 	
+	public void flush() {
+		out.flush();
+		file.flush();
+	}
+	
 	/**
 	 * Unbind the stream.
 	 * @param id The bind id.
 	 */
 	public void unbind(String id) {
 		if (bindId == id) {
+			out.flush();
 			bindId = bindQueue.poll();
 			
 			file.println("Unbound: " + id + " to " + bindId);
