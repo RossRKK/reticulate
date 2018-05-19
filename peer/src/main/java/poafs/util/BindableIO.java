@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class BindableIO implements Runnable {
 	
@@ -40,6 +42,8 @@ public class BindableIO implements Runnable {
 	
 	private Queue<String> bindQueue = new LinkedList<String>();
 	
+	private BlockingQueue<String> lineQueue = new LinkedBlockingQueue<String>();
+	
 	private PrintWriter file;
 
 	/**
@@ -65,23 +69,17 @@ public class BindableIO implements Runnable {
 	public void run() {
 		while (in.hasNextLine()) {
 			try {
-				//shouldWaitForLine = true;
+				lineQueue.put(in.nextLine());
 				
-				line = in.nextLine();
-				
-				shouldWaitForLine = false;
 				//notify that there is a new line read in
 				synchronized (lineWaiter) {
 					lineWaiter.notifyAll();
 				}
-				
-				//wait until the next line is requested
-				synchronized (in) {
-					in.wait();
-				}
 			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 		}
 	}
 	
@@ -96,29 +94,14 @@ public class BindableIO implements Runnable {
 			//wait for the bind ids to match
 			
 			//wait for a line to be read
-			while (shouldWaitForLine || bindId != id) {
+			while (lineQueue.isEmpty() || bindId != id) {
 				synchronized (lineWaiter) {
 					lineWaiter.wait();
 				}
 			}
 			
-			/*synchronized (bindWaiter) {
-				//wait for the bind ids to match
-				while (bindId != id) {
-					bindWaiter.wait();
-				}
-			}*/
-			
 			//get the line
-			String line = this.line;
-			
-			//tell the reader thread to read the next line
-			synchronized (in) {
-				in.notifyAll();
-			}
-			
-			//String line = in.nextLine();
-			shouldWaitForLine = true;
+			String line = lineQueue.take();
 			
 			file.println("Read: " + line);
 			file.flush();
