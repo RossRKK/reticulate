@@ -91,7 +91,8 @@ public class EthAuth implements IAuthenticator {
 		try {
 			return contract.getAccessLevel(fileId, user).send().intValueExact();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.err.println("Error getting access level for " + fileId);
 			return 0;
 		}
 	}

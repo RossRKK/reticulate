@@ -21,7 +21,11 @@ public class FileInfo {
 	}
 	
 	public Set<String> getPeerIdsForBlock(int index) {
-		return blocks.get(index);
+		if (blocks.size() > index) {
+			return blocks.get(index);
+		} else {
+			return new HashSet<String>();
+		}
 	}
 
 	public void addPeerForBlock(int index, String peerId) {

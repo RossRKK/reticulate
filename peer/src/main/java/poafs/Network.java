@@ -334,7 +334,13 @@ public class Network {
 	 * @throws NoValidPeersException
 	 */
 	public void updateFileContent(String fileId, byte[] bytes) throws KeyException, NoSuchAlgorithmException, NoValidPeersException {
-		PoafsFile file = fileManager.getFile(fileId);
+		PoafsFile file;
+		//there may not be a local copy
+		if (fileManager.getFile(fileId) == null) {
+			file = new PoafsFile(fileId);
+		} else {
+			file = fileManager.getFile(fileId);
+		}
 		SecretKey key = keyStore.unwrapKey(auth.getKeyForFile(fileId));
 		
 		byte[][] checkSums = divideIntoBlocks(file, bytes, key);		
@@ -351,22 +357,23 @@ public class Network {
 			//this allows the upload to happen after the checksum has been updated
 			Runnable updateAndUpload = () -> { 
 				if (!auth.updateCheckSum(file.getId(), index.intValue(), checkSums[index.intValue()])) {
-					System.err.println("Error updating checksum");
-				}
+					System.err.println("Error updating checksum for block " + file.getId() + ":" + index.intValue());
+				} else {
 				
-				//send the updated file to effected nodes
-				Collection<String> peerIds = tracker.findBlock(fileId, index.intValue());
-	
-				for(String id:peerIds) {
-					try {
-						uploadBlockToPeer(id, fileId, file.getBlocks().get(index));
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (ProtocolException e) {
-						e.printStackTrace();
+					//send the updated file to effected nodes
+					Collection<String> peerIds = tracker.findBlock(fileId, index.intValue());
+		
+					for(String id:peerIds) {
+						try {
+							uploadBlockToPeer(id, fileId, file.getBlocks().get(index));
+						} catch (IOException e) {
+							e.printStackTrace();
+						} catch (ProtocolException e) {
+							e.printStackTrace();
+						}
 					}
+					System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
 				}
-				System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
 			};
 
 			new Thread(updateAndUpload).start();

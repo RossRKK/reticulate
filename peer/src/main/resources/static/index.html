@@ -27,9 +27,9 @@
         <div class="container">
             <hr>
             <div class="row">
-                <div class="col-1"><i class="fas fa-3x  fa-code-branch"></i></div>
-                <div class="col-10"><h1>Reticulate</h1></div>
-                <div class="col-1"><i class="icon fas fa-2x fa-upload"></i></div>
+                <div class="col-1"><i class="fas fa-3x fa-code-branch"></i></div>
+                <div class="col-11"><h1>Reticulate</h1></div>
+                <!--<div class="col-1"><i class="icon fas fa-2x fa-upload"></i></div>-->
             </div>
             <hr>
             <div class="row">
@@ -37,21 +37,6 @@
                 <div class="col-5" id="username">Loading...</div>
                 <div class="col-1"><i class="fas fa-lg fa-folder"></i></div>
                 <div class="col-5" id="rootDir">Loading...</div>
-            </div>
-
-            <hr>
-
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item active" aria-current="page"><i class="far fa-hdd"></i></li>
-                    </ol>
-                </nav>
-                <div class="list-group" id="dir-entries">
-                    <div class="list-group-item list-group-item-action centered">
-                        <i class="fas fa-lg fa-spin fa-spinner"></i>
-                    </div>
-                </div>
             </div>
 
             <hr>
@@ -66,10 +51,28 @@
                 <div class="col-2"><h3>Public Key:</h3></div>
                 <div class="col-1"><i id="copy-key" class="icon far fa-lg fa-copy"></i></div>
             </div>
+
             <div class="row">
                 <div class="col-4"><span id="peer-id"></span></div>
                 <div class="col-5"><span id="addr"></span></div>
                 <div class="col-3"><span id="key"></span></div>
+            </div>
+
+            <hr>
+
+            <div class="card">
+                <div class="card-header">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item active" aria-current="page"><i class="far fa-hdd"></i></li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="list-group list-group-flush" id="dir-entries">
+                    <div class="list-group-item list-group-item-action text-center">
+                        <i class="fas fa-lg fa-spin fa-spinner"></i>
+                    </div>
+                </div>
             </div>
 
             <hr>

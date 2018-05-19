@@ -153,6 +153,10 @@ public class PoafsFileStream extends InputStream {
 			synchronized (fetcher) {
 				while (fileContent.get(currentReadBlockIndex) == null) {
 					fetcher.wait();
+					
+					if (fetcher.getHasFailed()) {
+						throw new IOException("Error fetching " + fileId + ":" + currentReadBlockIndex);
+					}
 				}
 				
 				int output = fileContent.get(currentReadBlockIndex).getContent()[currentReadIndex];
@@ -170,12 +174,12 @@ public class PoafsFileStream extends InputStream {
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-			return -1;
+			throw new IOException("Error fetching " + fileId + ":" + currentReadBlockIndex);
 		} catch (NullPointerException e) {
 			System.out.println(currentReadBlockIndex);
 			System.out.println(nextFetchIndex);
 			
-			return -1;
+			throw new IOException("Error fetching " + fileId + ":" + currentReadBlockIndex);
 		}
 	}
 }
@@ -205,6 +209,8 @@ class  BlockFetcher implements Runnable {
 	private FileManager fm;
 	
 	private PeerManager pm;
+	
+	private boolean hasFailed;
 	
 	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker, FileManager fm, PeerManager pm) {
 		this.auth = auth;
@@ -240,8 +246,14 @@ class  BlockFetcher implements Runnable {
 			synchronized (this) {
 				this.notifyAll();
 			}
-		} catch (ProtocolException | NoValidPeersException e) {
+		} catch (IOException | ProtocolException | NoValidPeersException e) {
 			System.err.println("Error fetching block: " + fileId + ":" + index);
+			
+			hasFailed = true;
+			
+			synchronized (this) {
+				this.notifyAll();
+			}
 		}
 	}
 	
@@ -249,8 +261,9 @@ class  BlockFetcher implements Runnable {
 	 * Decrypt a file block.
 	 * @param block The file block to be decrypted.
 	 * @return The decrypted file block.
+	 * @throws IOException 
 	 */
-	private FileBlock decryptBlock(FileBlock block) {
+	private FileBlock decryptBlock(FileBlock block) throws IOException {
 		long startTime = System.currentTimeMillis();
 		if (block instanceof EncryptedFileBlock) {
 			String peerId = block.getOriginPeerId();
@@ -273,9 +286,7 @@ class  BlockFetcher implements Runnable {
 					
 					return out;
 				} else {
-					//TODO handle the error
-					System.out.println("Invalid checksum for block " + fileId + ":" + index);
-					return null;
+					throw new IOException("Invalid checksum for block " + fileId + ":" + index);
 				}
 			} catch (KeyException | NoSuchAlgorithmException e) {
 				System.out.println("Error decrypting " + fileId + ":" + index);
@@ -336,16 +347,7 @@ class  BlockFetcher implements Runnable {
 					
 					
 					return out;
-				} catch (IOException e) {
-					System.err.println(peerId + " was unreachable");
-					peerIds.remove(peerId);
-					
-					//TODO tell the tracker that the peer couldn't be reached
-					
-					if (peerIds.size() == 0) {
-						break;
-					}
-				} catch (ProtocolException e) {
+				} catch (Exception e) {
 					System.err.println(e.getMessage());
 					peerIds.remove(peerId);
 					
@@ -356,5 +358,9 @@ class  BlockFetcher implements Runnable {
 			}
 			throw new NoValidPeersException();
 		}
+	}
+	
+	public boolean getHasFailed() {
+		return hasFailed;
 	}
 }

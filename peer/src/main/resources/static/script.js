@@ -145,10 +145,11 @@ var Model = (function () {
         let reader = new FileReader();
 
         reader.onload = async function (event) {
-            console.log(event.target.result);
 
             //let fileId = await Reticulate.Net.addFile(new Uint8Array(event.target.result));
             let content = event.target.result.split(',')[1]; //remove data:*/*;base64
+            //TODO do a file write operation if the file matches the name of one already in the directory
+            //TODO be careful if the file name matches a directory
             let fileId = await Reticulate.Net.addFile(content);
             //let fileId = await Reticulate.Net.addFile(event.target.result);
             console.log("File ID: " + fileId);
@@ -271,8 +272,10 @@ var View = (function () {
             <i class="fas fa-lg fa-plus"></i>
         </div>*/
         let listItem = $("<div>", {
-            class: "list-group-item centered",
+            class: "list-group-item text-center",
         });
+
+        listItem.html("Drop files here to upload<br>");
         listItem.append(makeIcon("fas fa-lg fa-plus"));
 
         listItem.on("dragover", Controller.dragOverHandler);
@@ -294,17 +297,10 @@ var View = (function () {
 
         let listItem = $("<div>", {
             id: "dir-entry-" + entry.id,
-            "data-id": entry.id,
-            "data-type": entry.type,
-            "data-name": entry.name,
             class: "list-group-item list-group-item-action",
         });
 
-        listItem.on("click", function (e) {
-            //open the clicked entry
-            let entry = new Reticulate.Directory.entry(e.currentTarget.dataset.name, e.currentTarget.dataset.type, e.currentTarget.dataset.id)
-            Model.openEntry(entry);
-        });
+
 
         $("#dir-entries").append(listItem);
 
@@ -317,8 +313,12 @@ var View = (function () {
         row.append(makeIconCol("far " + (entry.type === DIR ? "fa-folder" : "fa-file")));
 
         let nameCol = $("<div>", {
-            class: "col-8",
+            class: "col-8 border-right",
+            "data-id": entry.id,
+            "data-type": entry.type,
+            "data-name": entry.name,
         });
+        nameCol.on("click", Controller.openEntry);
 
         row.append(nameCol);
 
@@ -327,11 +327,12 @@ var View = (function () {
 
         nameCol.append(name);
 
-        if (entry.type !== DIR) {
-            row.append(makeIconCol("icon fa fa-edit"));
-        }
         row.append(makeIconCol("icon fa fa-share-square"));
         row.append(makeIconCol("icon fa fa-cog"));
+
+        let deleteIcon = makeIconCol("icon fa fa-times");
+        deleteIcon.on("click", Controller.deleteEntry);
+        row.append(deleteIcon);
     }
 
     function clearDirectroyEntries() {
@@ -363,12 +364,14 @@ var Controller = (function () {
     }
 
     function handleFileId(e) {
-        Model.updateFileId($("#file-id-in").val());
+        let fileId = $("#file-id-in").val();
+        if (fileId) {
+            Model.updateFileId();
+        }
     }
 
     function dropHandler(e) {
         e = e.originalEvent;
-        console.log(e);
 
         // Prevent default behavior (Prevent file from being opened)
         e.preventDefault();
@@ -409,9 +412,21 @@ var Controller = (function () {
         e.preventDefault();
     }
 
+    function openEntry(e) {
+        console.log(e);
+        //open the clicked entry
+        let entry = new Reticulate.Directory.entry(e.currentTarget.dataset.name, e.currentTarget.dataset.type, e.currentTarget.dataset.id)
+        Model.openEntry(entry);
+    }
+
+    function deleteEntry(e) {
+        console.log(e);
+    }
+
     return {
         init,
         dropHandler,
         dragOverHandler,
+        openEntry,
     }
 })();
