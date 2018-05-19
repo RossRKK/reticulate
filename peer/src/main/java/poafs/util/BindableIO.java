@@ -1,8 +1,5 @@
 package poafs.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -13,6 +10,11 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * A class that represents an input and output stream. Both streams can be bound to a specific thread by using a "bind id".
+ * @author rossrkk
+ *
+ */
 public class BindableIO implements Runnable {
 	
 	/**
@@ -30,21 +32,26 @@ public class BindableIO implements Runnable {
 	 */
 	private String bindId = null;
 	
+	/**
+	 * An object that is notified when there is a bind change.
+	 */
 	private Object bindWaiter = new Object();
 	
 	/**
-	 * The currently read in line.
+	 * An object that is notified when there is a line read.
 	 */
-	private String line = null;
-	
-	private boolean shouldWaitForLine = true;
 	private Object lineWaiter = new Object();
 	
+	/**
+	 * The queue of bind ids.
+	 */
 	private Queue<String> bindQueue = new LinkedList<String>();
 	
+	/**
+	 * All the lines that have been read.
+	 */
 	private BlockingQueue<String> lineQueue = new LinkedBlockingQueue<String>();
 	
-	private PrintWriter file;
 
 	/**
 	 * Create a new bindable io stream.
@@ -54,17 +61,13 @@ public class BindableIO implements Runnable {
 	public BindableIO(InputStream in, OutputStream out, String id) {
 		this.in = new Scanner(in);
 		this.out = new PrintWriter(out);
-		
-		try {
-			file = new PrintWriter(new FileOutputStream("peers" + File.separator + id + ".log"));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+
 		new Thread(this).start();
 	}
 	
+	/**
+	 * Constantly read input lines.
+	 */
 	@Override
 	public void run() {
 		while (in.hasNextLine()) {
@@ -103,9 +106,6 @@ public class BindableIO implements Runnable {
 			//get the line
 			String line = lineQueue.take();
 			
-			file.println("Read: " + line);
-			file.flush();
-			
 			return line;
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -130,11 +130,6 @@ public class BindableIO implements Runnable {
 			
 			//print the line
 			out.println(line);
-			
-			file.println("Sent: " + line);
-			//file.flush();
-			
-			//out.flush();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -157,69 +152,65 @@ public class BindableIO implements Runnable {
 			
 			//print the line
 			out.print(line);
-			
-			file.print(line);
-			//file.flush();
-			
-			//out.flush();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	/**
+	 * Flush the output stream.
+	 */
+	public void flush() {
+		out.flush();
+	}
+	
+	/**
 	 * Bind the io stream.
 	 * @return The binding id.
 	 */
-	public String bind() {
+	public synchronized String bind() {
+		//assign a new bind id
 		String newBindId = UUID.randomUUID().toString();
 		
 		if (bindId == null) {
+			//if nothing is bound use the new bind id
 			bindId = newBindId;
 			
-			file.println("Bound: " + bindId);
-			file.flush();
 			
 			//notify that the bind id has changed
 			synchronized (bindWaiter) {
 				bindWaiter.notifyAll();
 			}
 		} else {
+			//otherwise add the bind to the queue
 			bindQueue.add(newBindId);
-			
-			file.println("Queded Bind: " + newBindId);
-			file.flush();
 		}
 		
+		//return the assigned bind id
 		return newBindId;
 	}
 	
-	public void flush() {
-		out.flush();
-		file.flush();
-	}
 	
 	/**
 	 * Unbind the stream.
 	 * @param id The bind id.
 	 */
-	public void unbind(String id) {
+	public synchronized void unbind(String id) {
+		//if the bind ids match
 		if (bindId == id) {
+			//flush the output stream for safety
 			out.flush();
+			//get the next bind id
 			bindId = bindQueue.poll();
 			
-			file.println("Unbound: " + id + " to " + bindId);
-			file.flush();
 			
 			//notify that the bind id has changed
 			synchronized (bindWaiter) {
 				bindWaiter.notifyAll();
 			}
 		} else {
+			//otherwise remove the id from elsewhere in the queue
 			((LinkedList<String>)bindQueue).remove(id);
-			
-			file.println("Dequeded Bind: " + id);
-			file.flush();
 		}
 	}
 
