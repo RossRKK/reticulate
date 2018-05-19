@@ -74,7 +74,7 @@ public class NetworkPeer implements IPeer {
 			/*out = new PrintWriter(s.getOutputStream());
 			sc = new Scanner(s.getInputStream());*/
 			
-			io = new BindableIO(s.getInputStream(), s.getOutputStream());
+			io = new BindableIO(s.getInputStream(), s.getOutputStream(), s.getInetAddress().getHostName());
 			
 			String bindId = io.bind();
 			

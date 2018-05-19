@@ -2,6 +2,7 @@
 /.metadata/
 /.recommenders/
 /peer/files/
+/peer/peers/
 /peer/build/
 /peer/.classpath
 /peer/.project

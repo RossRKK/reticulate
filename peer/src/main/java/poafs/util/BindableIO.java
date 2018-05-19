@@ -1,5 +1,8 @@
 package poafs.util;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -36,15 +39,24 @@ public class BindableIO implements Runnable {
 	private Object lineWaiter = new Object();
 	
 	private Queue<String> bindQueue = new LinkedList<String>();
+	
+	private PrintWriter file;
 
 	/**
 	 * Create a new bindable io stream.
 	 * @param in The underlying input stream.
 	 * @param out The underlying output stream.
 	 */
-	public BindableIO(InputStream in, OutputStream out) {
+	public BindableIO(InputStream in, OutputStream out, String id) {
 		this.in = new Scanner(in);
 		this.out = new PrintWriter(out);
+		
+		try {
+			file = new PrintWriter(new FileOutputStream("peers" + File.separator + id + ".log"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		new Thread(this).start();
 	}
@@ -108,8 +120,12 @@ public class BindableIO implements Runnable {
 			//String line = in.nextLine();
 			shouldWaitForLine = true;
 			
+			file.println("Read: " + line);
+			file.flush();
+			
 			return line;
 		} catch (InterruptedException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -132,9 +148,12 @@ public class BindableIO implements Runnable {
 			//print the line
 			out.println(line);
 			
+			file.println("Sent: " + line);
+			file.flush();
+			
 			out.flush();
 		} catch (InterruptedException e) {
-			System.err.println("Interrupted");
+			e.printStackTrace();
 		}
 	}
 	
@@ -156,9 +175,12 @@ public class BindableIO implements Runnable {
 			//print the line
 			out.print(line);
 			
+			file.print(line);
+			file.flush();
+			
 			out.flush();
 		} catch (InterruptedException e) {
-			
+			e.printStackTrace();
 		}
 	}
 	
@@ -172,12 +194,18 @@ public class BindableIO implements Runnable {
 		if (bindId == null) {
 			bindId = newBindId;
 			
+			file.println("Bound: " + bindId);
+			file.flush();
+			
 			//notify that the bind id has changed
 			synchronized (bindWaiter) {
 				bindWaiter.notifyAll();
 			}
 		} else {
 			bindQueue.add(newBindId);
+			
+			file.println("Queded Bind: " + newBindId);
+			file.flush();
 		}
 		
 		return newBindId;
@@ -191,12 +219,18 @@ public class BindableIO implements Runnable {
 		if (bindId == id) {
 			bindId = bindQueue.poll();
 			
+			file.println("Unbound: " + id + " to " + bindId);
+			file.flush();
+			
 			//notify that the bind id has changed
 			synchronized (bindWaiter) {
 				bindWaiter.notifyAll();
 			}
 		} else {
 			((LinkedList<String>)bindQueue).remove(id);
+			
+			file.println("Dequeded Bind: " + id);
+			file.flush();
 		}
 	}
 
