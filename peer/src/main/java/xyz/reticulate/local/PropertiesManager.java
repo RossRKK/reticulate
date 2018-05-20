@@ -157,14 +157,18 @@ public class PropertiesManager {
 			prop.setProperty("userContractAddress", userContractAddress);
 
 			
-			createWallet();
+			Scanner sc = new Scanner(System.in);
+			
+			createWallet(sc);
 			prop.setProperty("walletPath", "" + walletPath);
 			prop.setProperty("walletPass", walletPass);
 			
-			askForUsernameAndPassword();
+			askForUsernameAndPassword(sc);
 			
 			prop.setProperty("webUsername", webUsername);
 			prop.setProperty("webPassword", webPassword);
+			
+			sc.close();
 			
 			// save properties to project root folder
 			prop.store(output, null);
@@ -190,10 +194,9 @@ public class PropertiesManager {
 	 * @throws NoSuchProviderException 
 	 * @throws NoSuchAlgorithmException 
 	 */
-	private void createWallet() {
+	private void createWallet(Scanner sc) {
 		System.out.println("Creating a new Ethereum wallet");
 		
-		Scanner sc = new Scanner(System.in);
 		
 		String pass1 = null;
 		String pass2 = null;
@@ -210,8 +213,6 @@ public class PropertiesManager {
 			pass2 = sc.nextLine();
 		} while (!pass1.equals(pass2));
 		
-		sc.close();
-		
 		walletPass = pass1;
 		try {
 			walletPath = WalletUtils.generateNewWalletFile(pass1, new File("").getAbsoluteFile(), true);
@@ -222,8 +223,7 @@ public class PropertiesManager {
 		}
 	}
 	
-	private void askForUsernameAndPassword() {
-		Scanner sc= new Scanner(System.in);
+	private void askForUsernameAndPassword(Scanner sc) {
 		
 		System.out.println("For security reasons login credentials are required for using this node on the web.");
 		System.out.println("Please enter a username: ");
@@ -233,8 +233,6 @@ public class PropertiesManager {
 		System.out.println("Please enter a password: ");
 		
 		webPassword = sc.nextLine();
-		
-		sc.close();
 	}
 
 	public String getPeerId() {
