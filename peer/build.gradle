@@ -13,7 +13,7 @@ apply plugin: 'eclipse'
 
 apply plugin: 'application'
 
-mainClassName = "xyz.reticulate..Application"
+mainClassName = "xyz.reticulate.Application"
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -32,4 +32,6 @@ dependencies {
     
     //spark used for the web server
     compile "com.sparkjava:spark-core:2.7.1"
+    
+    compile 'com.qmetric:spark-authentication:1.4'
 }

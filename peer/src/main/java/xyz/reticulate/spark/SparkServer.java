@@ -1,11 +1,13 @@
 package xyz.reticulate.spark;
 
+import static spark.Spark.before;
 import static spark.Spark.delete;
 import static spark.Spark.exception;
 import static spark.Spark.get;
 import static spark.Spark.path;
 import static spark.Spark.post;
 import static spark.Spark.put;
+import static spark.Spark.before;
 import static spark.Spark.staticFiles;
 
 import java.io.ByteArrayOutputStream;
@@ -13,6 +15,9 @@ import java.io.PrintStream;
 import java.util.Base64;
 
 import javax.servlet.http.HttpServletResponse;
+
+import com.qmetric.spark.authentication.AuthenticationDetails;
+import com.qmetric.spark.authentication.BasicAuthenticationFilter;
 
 import spark.Route;
 import xyz.reticulate.Application;
@@ -36,6 +41,9 @@ public class SparkServer {
 		this.users = users;
 		
 		staticFiles.location("/static");
+		
+		before(new BasicAuthenticationFilter("*", new AuthenticationDetails(Application.getPropertiesManager().getWebUsername(), Application.getPropertiesManager().getWebPassword())));
+
 		
 		path("/peer", () -> {
 			get("/id", peerId);

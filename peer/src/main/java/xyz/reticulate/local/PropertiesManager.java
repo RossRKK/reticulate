@@ -60,6 +60,10 @@ public class PropertiesManager {
 	
 	private String userContractAddress;
 	
+	private String webUsername;
+	
+	private String webPassword;
+	
 	/**
 	 * The properties object.
 	 */
@@ -90,6 +94,9 @@ public class PropertiesManager {
 			walletPass = prop.getProperty("walletPass");
 			contractAddress = prop.getProperty("contractAddress");
 			userContractAddress = prop.getProperty("userContractAddress");
+			
+			webUsername = prop.getProperty("webUsername");
+			webPassword = prop.getProperty("webPassword");
 			
 			success = true;
 			
@@ -154,6 +161,11 @@ public class PropertiesManager {
 			prop.setProperty("walletPath", "" + walletPath);
 			prop.setProperty("walletPass", walletPass);
 			
+			askForUsernameAndPassword();
+			
+			prop.setProperty("webUsername", webUsername);
+			prop.setProperty("webPassword", webPassword);
+			
 			// save properties to project root folder
 			prop.store(output, null);
 
@@ -209,6 +221,21 @@ public class PropertiesManager {
 			e.printStackTrace();
 		}
 	}
+	
+	private void askForUsernameAndPassword() {
+		Scanner sc= new Scanner(System.in);
+		
+		System.out.println("For security reasons login credentials are required for using this node on the web.");
+		System.out.println("Please enter a username: ");
+		
+		webUsername = sc.nextLine();
+		
+		System.out.println("Please enter a password: ");
+		
+		webPassword = sc.nextLine();
+		
+		sc.close();
+	}
 
 	public String getPeerId() {
 		return peerId;
@@ -244,5 +271,13 @@ public class PropertiesManager {
 
 	public String getUserContractAddress() {
 		return userContractAddress;
+	}
+
+	public String getWebUsername() {
+		return webUsername;
+	}
+
+	public String getWebPassword() {
+		return webPassword;
 	}
 }
