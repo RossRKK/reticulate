@@ -148,21 +148,42 @@ var Model = (function () {
 
             //let fileId = await Reticulate.Net.addFile(new Uint8Array(event.target.result));
             let content = event.target.result.split(',')[1]; //remove data:*/*;base64
-            //TODO do a file write operation if the file matches the name of one already in the directory
-            //TODO be careful if the file name matches a directory
-            let fileId = await Reticulate.Net.addFile(content);
-            //let fileId = await Reticulate.Net.addFile(event.target.result);
-            console.log("File ID: " + fileId);
 
-            let entry = new Reticulate.Directory.entry(file.name, FILE, fileId);
-            currentDir.addEntry(entry);
+            //do a file write operation if the file matches the name of one already in the directory
+            let matchingEntry = currentDir.getFileId(file.name)
+            if (matchingEntry == null) {
+
+                let fileId = await Reticulate.Net.addFile(content);
+                //let fileId = await Reticulate.Net.addFile(event.target.result);
+                console.log("File ID: " + fileId);
+
+                let entry = new Reticulate.Directory.entry(file.name, FILE, fileId);
+                currentDir.addEntry(entry);
+            } else {
+                //don't over wirte directories
+                if (matchingEntry.type === FILE) {
+                    if (confirm("This will overwrite an existing file")) {
+                        await Reticulate.Net.updateFile(matchingEntry.id, content);
+                    }
+                } else {
+                    alert("Overwriting directories isn't supported");
+                    //TODO allow overwriting directories?
+                }
+            }
 
             View.displayDirectory(currentDir);
         };
 
-        //reader.readAsBinaryString(file);
-        //reader.readAsArrayBuffer(file);
+        View.startFileUpdate();
         reader.readAsDataURL(file);
+    }
+
+    async function mkdir(name) {
+        let fileId = await Reticulate.Net.addFile(btoa("../" + DIR + "/" + currentDir.id + "\n"));
+        let dir = new Reticulate.Directory.entry(name, DIR, fileId);
+        currentDir.addEntry(dir);
+
+        View.displayDirectory(currentDir);
     }
 
     return {
@@ -173,6 +194,7 @@ var Model = (function () {
         copyKey,
         openEntry,
         addFileEntry,
+        mkdir,
     }
 })();
 
@@ -272,6 +294,7 @@ var View = (function () {
             <i class="fas fa-lg fa-plus"></i>
         </div>*/
         let listItem = $("<div>", {
+            id: "addFile",
             class: "list-group-item text-center",
         });
 
@@ -339,6 +362,12 @@ var View = (function () {
         $("#dir-entries").empty();
     }
 
+    function startFileUpdate() {
+        let addFile = $("#addFile");
+        addFile.empty();
+        addFile.append(makeIcon("fas fa-lg fa-spin fa-spinner"));
+    }
+
     return {
         setPeerId,
         setUserAddress,
@@ -348,6 +377,7 @@ var View = (function () {
         setRootDir,
         setUsername,
         displayDirectory,
+        startFileUpdate,
     }
 })();
 
@@ -361,6 +391,15 @@ var Controller = (function () {
         $("#copy-peer").on("click", Model.copyPeer);
         $("#copy-addr").on("click", Model.copyAddr);
         $("#copy-key").on("click", Model.copyKey);
+
+        $("#mkdir").on("click", mkdir);
+    }
+
+    function mkdir() {
+        let name = prompt("Enter new directory name:");
+        if (name) {
+            Model.mkdir(name);
+        }
     }
 
     function handleFileId(e) {

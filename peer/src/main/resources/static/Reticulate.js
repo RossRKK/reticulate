@@ -66,7 +66,7 @@ var Reticulate = (function () {
                 data: content
             });
         }
-        
+
         //get the contents of a file
         async function getFile(fileId) {
             return await $.ajax({
@@ -75,7 +75,7 @@ var Reticulate = (function () {
             });
         }
 
-        //update the contents of a file
+        //update the contents of a file (contents encoded in base64)
         async function updateFile(fileId, content) {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId),
@@ -239,7 +239,7 @@ var Reticulate = (function () {
                     this.entries.push(entry);
                     this.content += entry.text;
 
-                    Net.updateFile(this.id, this.content);
+                    Net.updateFile(this.id, btoa(this.content));
 
                     return true;
                 } else {

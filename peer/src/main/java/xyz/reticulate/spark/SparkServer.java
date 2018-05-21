@@ -159,7 +159,6 @@ public class SparkServer {
 	 */
 	private Route addFile = (req, res) -> {
 		//register the file with the network
-		req.headers("Content-type");
 		return net.registerFile(Base64.getDecoder().decode(req.body()));
 	};
 	
@@ -168,7 +167,7 @@ public class SparkServer {
 	 */
 	private Route writeFile = (req, res) -> {
 		//register the file with the network
-		net.updateFileContent(req.params(":fileId"), req.bodyAsBytes());
+		net.updateFileContent(req.params(":fileId"), Base64.getDecoder().decode(req.body()));
 		return "Success";
 	};
 	

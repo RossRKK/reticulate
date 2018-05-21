@@ -329,27 +329,8 @@ public class Network {
 		System.out.println("Registered");
 		
 		//updating checksums
-		for (int i = 0; i < checkSums.length; i++) {
-			Integer index = new Integer(i);
-			
-			//this allows the upload to happen after the checksum has been updated
-			Runnable updateAndUpload = () -> { 
-				if (!auth.updateCheckSum(file.getId(), index.intValue(), checkSums[index.intValue()])) {
-					System.err.println("Error updating checksum");
-				}
-
-				try {
-					uploadBlockRandomly(id, file.getBlocks().get(index));
-				} catch (NoValidPeersException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
-			};
-			
-			new Thread(updateAndUpload).start();
-		}
-		System.out.println("Checksum update transactions sent");
+		updateChecksums(file, checkSums);
+		System.out.println("Checksums updated");
 		
 		return id;
 	}
@@ -378,6 +359,18 @@ public class Network {
 		
 		System.out.println("File length updated");
 		
+		updateChecksums(file, checkSums);
+	}
+
+	/**
+	 * Update the checksums of a file to match the provided ones.
+	 * @param file The file being updated.
+	 * @param checkSums The new checksums.
+	 */
+	private void updateChecksums(ReticulateFile file, byte[][] checkSums) {
+		Object waiter = new Object();
+		boolean[] completed = new boolean[file.getNumBlocks()];
+		
 		//updating checksums
 		for (int i = 0; i < checkSums.length; i++) {
 			
@@ -390,11 +383,11 @@ public class Network {
 				} else {
 				
 					//send the updated file to effected nodes
-					Collection<String> peerIds = tracker.findBlock(fileId, index.intValue());
+					Collection<String> peerIds = tracker.findBlock(file.getId(), index.intValue());
 		
 					for(String id:peerIds) {
 						try {
-							uploadBlockToPeer(id, fileId, file.getBlocks().get(index));
+							uploadBlockToPeer(id, file.getId(), file.getBlocks().get(index));
 						} catch (IOException e) {
 							e.printStackTrace();
 						} catch (ProtocolException e) {
@@ -402,13 +395,40 @@ public class Network {
 						}
 					}
 					System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
+					
+					
+				}
+				//mark this block as completed
+				completed[index.intValue()] = true;
+				synchronized (waiter) {
+					waiter.notifyAll();
 				}
 			};
 
 			new Thread(updateAndUpload).start();
 		}
+		
+		synchronized (waiter) {
+			while (!allDone(completed)) {
+				try {
+					waiter.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		System.out.println("Completed updating checksums for " + file.getId());
 	}
 
+	private boolean allDone(boolean[] completed) {
+		for (int i = 0; i < completed.length; i++) {
+			if (!completed[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * Upload a file to the network.
 	 * @param fileId The id of the file to upload.
