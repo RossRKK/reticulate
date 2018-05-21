@@ -83,7 +83,7 @@ public class Network {
 	/**
 	 * The user's ethereum wallet credentials.
 	 */
-	private Credentials creds;
+	protected Credentials creds;
 	
 	/**
 	 * The file system manager.

@@ -186,6 +186,11 @@ var Model = (function () {
         View.displayDirectory(currentDir);
     }
 
+    function removeEntry(id) {
+        currentDir.removeEntry(id);
+        View.displayDirectory(currentDir);
+    }
+
     return {
         init,
         updateFileId,
@@ -195,6 +200,7 @@ var Model = (function () {
         openEntry,
         addFileEntry,
         mkdir,
+        removeEntry,
     }
 })();
 
@@ -354,6 +360,7 @@ var View = (function () {
         row.append(makeIconCol("icon fa fa-cog"));
 
         let deleteIcon = makeIconCol("icon fa fa-times");
+        deleteIcon.attr('data-id', entry.id);
         deleteIcon.on("click", Controller.deleteEntry);
         row.append(deleteIcon);
     }
@@ -452,14 +459,14 @@ var Controller = (function () {
     }
 
     function openEntry(e) {
-        console.log(e);
         //open the clicked entry
         let entry = new Reticulate.Directory.entry(e.currentTarget.dataset.name, e.currentTarget.dataset.type, e.currentTarget.dataset.id)
         Model.openEntry(entry);
     }
 
     function deleteEntry(e) {
-        console.log(e);
+        console.log(e)
+        Model.removeEntry(e.currentTarget.dataset.id);
     }
 
     return {
@@ -467,5 +474,6 @@ var Controller = (function () {
         dropHandler,
         dragOverHandler,
         openEntry,
+        deleteEntry,
     }
 })();

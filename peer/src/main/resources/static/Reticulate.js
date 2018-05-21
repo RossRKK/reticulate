@@ -12,7 +12,7 @@ const ROOT_DIR = "../dir/\n";
 
 var Reticulate = (function () {
 
-    let domain = "http://localhost:4567";
+    let domain = "http://local.reticulate.xyz:4567";
 
     function setDomain(d) {
         domain = d;
@@ -261,7 +261,7 @@ var Reticulate = (function () {
                 });
 
                 //upload the updated content
-                Net.updateFile(this.id, this.content);
+                Net.updateFile(this.id, btoa(this.content));
             }
 
             //get the id of a file in this directory with the given name

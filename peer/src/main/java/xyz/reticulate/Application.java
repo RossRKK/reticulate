@@ -60,7 +60,7 @@ public class Application {
 					
 					if (Desktop.isDesktopSupported()) {
 					    try {
-							Desktop.getDesktop().browse(new URI("http://localhost:4567"));
+							Desktop.getDesktop().browse(new URI("http://local.reticulate.xyz:4567"));
 						} catch (URISyntaxException e) {
 							e.printStackTrace();
 						}
