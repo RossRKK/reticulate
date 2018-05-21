@@ -243,6 +243,7 @@ class  BlockFetcher implements Runnable {
 			}
 		} catch (IOException | ProtocolException | NoValidPeersException e) {
 			System.err.println("Error fetching block: " + fileId + ":" + index);
+			e.printStackTrace();
 			
 			hasFailed = true;
 			

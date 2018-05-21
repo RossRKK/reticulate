@@ -3,12 +3,12 @@ package xyz.reticulate;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -294,7 +294,9 @@ public class Network {
 		inFile.close();
 		System.out.println("File read");
 		
-		registerFile(bytes);
+		String id = UUID.randomUUID().toString();
+		
+		registerFile(id, bytes);
 	}
 	
 	
@@ -310,8 +312,8 @@ public class Network {
 	 * @throws IOException
 	 * @throws NoValidPeersException 
 	 */
-	public String registerFile(byte[] bytes) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException, NoValidPeersException {
-		String id = UUID.randomUUID().toString();
+	public void registerFile(String id, byte[] bytes) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException, NoValidPeersException {
+		
 		System.out.println(id);
 		
 		SecretKey key = buildAESKey();
@@ -332,7 +334,7 @@ public class Network {
 		updateChecksums(file, checkSums);
 		System.out.println("Checksums updated");
 		
-		return id;
+		//return id;
 	}
 	
 	/**
@@ -355,9 +357,11 @@ public class Network {
 		
 		byte[][] checkSums = divideIntoBlocks(file, bytes, key);		
 		
-		auth.updateFileLength(fileId, file.getNumBlocks());
-		
-		System.out.println("File length updated");
+		//save a trip to the ethereum network if we can
+		if (auth.getFileLength(fileId) != file.getNumBlocks()) {
+			auth.updateFileLength(fileId, file.getNumBlocks());
+			System.out.println("File length updated");
+		}
 		
 		updateChecksums(file, checkSums);
 	}
@@ -526,7 +530,7 @@ public class Network {
 		return tracker.listFiles();
 	}
 	
-	public ReticulateFileStream fetchFile(String fileId) {
+	public InputStream fetchFile(String fileId) {
 		return new ReticulateFileStream(fileId, 5, auth, keyStore, tracker, fileManager, peerManager);
 	}
 

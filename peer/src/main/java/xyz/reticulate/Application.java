@@ -52,7 +52,7 @@ public class Application {
 				System.out.println("Config Loaded");
 				try {
 					Credentials creds = WalletUtils.loadCredentials(pm.getWalletPass(), pm.getWalletPath());
-					net = new Network(creds, pm.getContractAddress());
+					net = new CachedNetwork(creds, pm.getContractAddress());
 					
 					IUsers users = new EthUsers(creds, pm.getUserContractAddress());
 					

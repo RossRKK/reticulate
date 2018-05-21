@@ -7,12 +7,13 @@ import static spark.Spark.get;
 import static spark.Spark.path;
 import static spark.Spark.post;
 import static spark.Spark.put;
-import static spark.Spark.before;
 import static spark.Spark.staticFiles;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Base64;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -22,7 +23,6 @@ import com.qmetric.spark.authentication.BasicAuthenticationFilter;
 import spark.Route;
 import xyz.reticulate.Application;
 import xyz.reticulate.Network;
-import xyz.reticulate.ReticulateFileStream;
 import xyz.reticulate.auth.IUsers;
 import xyz.reticulate.lib.Reference;
 
@@ -130,7 +130,7 @@ public class SparkServer {
 	 * Handle requests for files.
 	 */
 	private Route getFile = (req, res) -> {
-		ReticulateFileStream stream = net.fetchFile(req.params(":fileId"));
+		InputStream stream = net.fetchFile(req.params(":fileId"));
 		
 		HttpServletResponse raw = res.raw();
 		
@@ -158,8 +158,10 @@ public class SparkServer {
 	 * Handle the creation of a file.
 	 */
 	private Route addFile = (req, res) -> {
+		String id = UUID.randomUUID().toString();
 		//register the file with the network
-		return net.registerFile(Base64.getDecoder().decode(req.body()));
+		net.registerFile(id, Base64.getDecoder().decode(req.body()));
+		return id;
 	};
 	
 	/**
