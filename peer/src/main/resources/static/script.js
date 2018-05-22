@@ -342,7 +342,7 @@ var View = (function () {
         row.append(makeIconCol("far " + (entry.type === DIR ? "fa-folder" : "fa-file")));
 
         let nameCol = $("<div>", {
-            class: "col-8 border-right",
+            class: "col-8 border-right pointer",
             "data-id": entry.id,
             "data-type": entry.type,
             "data-name": entry.name,

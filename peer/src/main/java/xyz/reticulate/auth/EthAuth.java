@@ -1,6 +1,9 @@
 package xyz.reticulate.auth;
 
 import java.math.BigInteger;
+import java.util.Base64;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -21,7 +24,10 @@ public class EthAuth implements IAuthenticator {
 	
 	private ReticulateAuth contract;
 	
+	private Logger log = Logger.getLogger(EthAuth.class.getSimpleName());
+	
 	public EthAuth(Credentials credentials, String contractAddress) {
+		log.setLevel(Level.INFO);
 		web3j = Web3j.build(new HttpService("https://rinkeby.infura.io/kMVN82WbWTrThVdoRsKH"));
 		
 		contract = new ReticulateAuth(contractAddress, web3j, 
@@ -38,7 +44,7 @@ public class EthAuth implements IAuthenticator {
 		try {
 			return contract.getKeyForFile(fileId).send();
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error getting key for file " + fileId, e);
 			return null;
 		}
 	}
@@ -54,7 +60,7 @@ public class EthAuth implements IAuthenticator {
 		try {
 			return contract.getFileLength(fileId).send().intValue();
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error getting length of file " + fileId, e);
 			return -1;
 		}
 	}
@@ -73,7 +79,7 @@ public class EthAuth implements IAuthenticator {
 			
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error registering file " + file.getId(), e);
 			return false;
 		}
 	}
@@ -89,8 +95,7 @@ public class EthAuth implements IAuthenticator {
 		try {
 			return contract.getAccessLevel(fileId, user).send().intValueExact();
 		} catch (Exception e) {
-			//e.printStackTrace();
-			System.err.println("Error getting access level for " + fileId);
+			log.log(Level.SEVERE, "Error getting access level for user " + user + "on  file " + fileId, e);
 			return 0;
 		}
 	}
@@ -106,7 +111,7 @@ public class EthAuth implements IAuthenticator {
 			contract.removeFile(fileId).send();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error removing file " + fileId, e);
 			return false;
 		}
 	}
@@ -125,7 +130,7 @@ public class EthAuth implements IAuthenticator {
 			contract.shareFile(fileId, user, recipientKey, BigInteger.valueOf(accessLevel)).send();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error sharing file " + fileId + " with user " + user + " and access level " + accessLevel, e);
 			return false;
 		}
 	}
@@ -142,7 +147,7 @@ public class EthAuth implements IAuthenticator {
 			contract.revokeShare(fileId, user).send();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error revoking user's (" + user + ") share for file " + fileId, e);
 			return false;
 		}
 	}
@@ -160,7 +165,7 @@ public class EthAuth implements IAuthenticator {
 			contract.modifyAccessLevel(fileId, user, BigInteger.valueOf(accessLevel)).send();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error modifiying access level for file " + fileId + " and user " + user + " to level " + accessLevel, e);
 			return false;
 		}
 	}
@@ -171,7 +176,7 @@ public class EthAuth implements IAuthenticator {
 			contract.updateFileLength(fileId, BigInteger.valueOf(newLength)).send();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error updating file length for file " + fileId, e);
 			return false;
 		}
 	}
@@ -183,6 +188,7 @@ public class EthAuth implements IAuthenticator {
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
+			log.log(Level.SEVERE, "Error updating checksum for block " + fileId + ":" + blockIndex, e);
 			return false;
 		}
 	}
@@ -196,20 +202,24 @@ public class EthAuth implements IAuthenticator {
 			return false;
 		}*/
 		byte[] correctSum = getCheckSum(fileId, blockIndex);
+		boolean correct = true;
 		//doing this locally prevents uncessary execution on the blockchain
-		System.out.println("Checksum has length: " + correctSum.length);
 		if (correctSum.length == checkSum.length) {
-			
 			for (int i = 0; i < correctSum.length; i++) {
 				if (correctSum[i] != checkSum[i]) {
-					return false;
+					correct = false;
+					break;
 				}
 			}
-			
-			return true;
 		} else {
-			return false;
+			correct = false;
 		}
+		
+		if (!correct) {
+			log.warning("Failed checksum comparison for " + fileId + ":" + blockIndex + ", Expected " + Base64.getEncoder().encodeToString(checkSum) + " to equal " + Base64.getEncoder().encodeToString(correctSum));
+		}
+		
+		return correct;
 	}
 
 	@Override
@@ -217,7 +227,7 @@ public class EthAuth implements IAuthenticator {
 		try {
 			return contract.getCheckSum(fileId, BigInteger.valueOf(blockIndex)).send();
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.log(Level.SEVERE, "Error getting checksum for file " + fileId, e);
 			return null;
 		}
 	}

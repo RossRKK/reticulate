@@ -17,6 +17,8 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.crypto.BadPaddingException;
@@ -54,6 +56,8 @@ import xyz.reticulate.peer.PeerManager;
  *
  */
 public class Network {
+	
+	protected Logger log = Logger.getLogger(Network.class.getSimpleName());
 
 	/**
 	 * The size of AES key that should be used.
@@ -68,7 +72,7 @@ public class Network {
 	/**
 	 * The authenticator being used by this peer.
 	 */
-	private IAuthenticator auth;
+	protected IAuthenticator auth;
 	
 	/**
 	 * The key store used to encrypt and decrypt files.
@@ -95,6 +99,8 @@ public class Network {
 	 */
 	private PeerManager peerManager;
 	
+	private Worker worker;
+	
 	/**
 	 * Create a new network object.
 	 * @param creds The ethereum credentials this network should use.
@@ -105,7 +111,9 @@ public class Network {
 	 */
 	public Network(Credentials creds, String contractAddress) throws ProtocolException, IOException, CipherException {
 		this.creds = creds;
-		System.out.println(creds.getAddress());
+		log.setLevel(Level.INFO);
+		
+		log.log(Level.CONFIG, creds.getAddress());
 		
 		//automatically derive an rsa key pair from the ethereum wallet, this prevenets the need to store RSA keys seperately.
 		keyStore = new KeyStore(KeyStore.buildRSAKeyPairFromWallet(creds));
@@ -120,13 +128,13 @@ public class Network {
 		new Thread(peerManager).start();
 		
 		//start up the worker thread
-		Worker w = new Worker(this, fileManager, tracker, Reference.DEFAULT_REDUNDANCY);
-		new Thread(w).start();
+		worker = new Worker(this, auth, fileManager, tracker, Reference.DEFAULT_REDUNDANCY);
+		new Thread(worker).start();
 		
 		try {
 			startTraversal();
 		} catch (ProtocolException | IOException e) {
-			System.out.println("Failed to connect to known peer");
+			log.log(Level.SEVERE, "Failed to connect to known peer", e);
 		}
 	}
 	
@@ -165,8 +173,8 @@ public class Network {
 		traversed = new HashSet<String>();
 		
 		traverse(new PeerInfo(peerId, new InetSocketAddress(host, port)), 0);
-		
-		System.out.println("Completed network traversal");
+
+		log.fine("Completed network traversal");
 	}
 	
 	/**
@@ -176,15 +184,15 @@ public class Network {
 	 */
 	private void traverse(PeerInfo peerInfo, int depth) {
 		tracker.registerPeer(peerInfo.getPeerId(), peerInfo.getAddr());
-		System.out.println("Found peer: " + peerInfo.getPeerId());
+		log.fine("Found peer: " + peerInfo.getPeerId());
 		
 		traversed.add(peerInfo.getPeerId());
 		
 		try {
 			//open a connection to this peer
 			IPeer peer = peerManager.openConnection(peerInfo.getPeerId());
-			
-			System.out.println("Connected to peer: " + peerInfo.getPeerId());
+
+			log.log(Level.FINER, "Connected to peer: " + peerInfo.getPeerId());
 			
 			if (peer != null) {
 				//find all the peers it knows about
@@ -193,12 +201,12 @@ public class Network {
 				//register them
 				tracker.registerPeers(knownPeers);
 				
-				System.out.println("Got known peers from: " + peerInfo.getPeerId());
+				log.log(Level.FINEST, "Got known peers from: " + peerInfo.getPeerId());
 				
 				//register it's files
 				tracker.registerFiles(peerInfo.getPeerId(), peer.requestAvailableFiles());
 				
-				System.out.println("Got known files from: " + peerInfo.getPeerId());
+				log.log(Level.FINEST, "Got known files from: " + peerInfo.getPeerId());
 				
 				if (depth < MAX_TRAVERSAL_DEPTH) {
 					//apply the same operation to all the peers it knows about
@@ -208,7 +216,7 @@ public class Network {
 							//recursively traverse the tree
 							traverse(pi, depth + 1);
 						} else {
-							System.out.println("Reached maximum traversal depth");
+							log.log(Level.FINE, "Reached maximum traversal depth");
 						}
 					}
 				}
@@ -264,11 +272,12 @@ public class Network {
 			tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), file.getId(), i);
 			
 			//register the blocks checksum
-			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+			/*MessageDigest crypt = MessageDigest.getInstance("SHA-1");
 	        crypt.reset();
 	        crypt.update(encrypted.getContent());
 	        
-	        checkSums[i] = crypt.digest();
+	        checkSums[i] = crypt.digest();*/
+			checkSums[i] = encrypted.getChecksum();
 		}
 		
 		return checkSums;
@@ -292,7 +301,7 @@ public class Network {
 		byte[] bytes = new byte[numOfBytes];
 		inFile.read(bytes);
 		inFile.close();
-		System.out.println("File read");
+		log.info("File read");
 		
 		String id = UUID.randomUUID().toString();
 		
@@ -314,7 +323,7 @@ public class Network {
 	 */
 	public void registerFile(String id, byte[] bytes) throws NoSuchAlgorithmException, ProtocolException, KeyException, NoSuchAlgorithmException, IOException, NoValidPeersException {
 		
-		System.out.println(id);
+		log.info("New file ID: " + id);
 		
 		SecretKey key = buildAESKey();
 		
@@ -322,17 +331,18 @@ public class Network {
 		
 		byte[][] checkSums = divideIntoBlocks(file, bytes, key);
 		
-		System.out.println("Encrypted");
+		log.fine("File " + id + " encrypted");
 		
 		fileManager.registerFile(file);
 		file.saveFile();
 		
 		auth.registerFile(file, file.getNumBlocks(), ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
-		System.out.println("Registered");
+		
+		log.fine("File " + id + " registered");
 		
 		//updating checksums
 		updateChecksums(file, checkSums);
-		System.out.println("Checksums updated");
+		log.fine("File " + id + " checksums updated");
 		
 		//return id;
 	}
@@ -360,8 +370,13 @@ public class Network {
 		//save a trip to the ethereum network if we can
 		if (auth.getFileLength(fileId) != file.getNumBlocks()) {
 			auth.updateFileLength(fileId, file.getNumBlocks());
-			System.out.println("File length updated");
+			
+			log.fine("File " + fileId + " length updated to " + file.getNumBlocks());
+		} else {
+			log.fine("File " + fileId + " length updated unecessary, was already " + file.getNumBlocks());
 		}
+		
+		fileManager.registerFile(file);
 		
 		updateChecksums(file, checkSums);
 	}
@@ -383,7 +398,7 @@ public class Network {
 			//this allows the upload to happen after the checksum has been updated
 			Runnable updateAndUpload = () -> { 
 				if (!auth.updateCheckSum(file.getId(), index.intValue(), checkSums[index.intValue()])) {
-					System.err.println("Error updating checksum for block " + file.getId() + ":" + index.intValue());
+					log.severe("Error updating checksum for block " + file.getId() + ":" + index.intValue());
 				} else {
 				
 					//send the updated file to effected nodes
@@ -398,8 +413,7 @@ public class Network {
 							e.printStackTrace();
 						}
 					}
-					System.out.println("Finished update and upload of " + file.getId() + ":" + index.intValue());
-					
+					log.fine("Finished update and upload of " + file.getId() + ":" + index.intValue());
 					
 				}
 				//mark this block as completed
@@ -421,7 +435,8 @@ public class Network {
 				}
 			}
 		}
-		System.out.println("Completed updating checksums for " + file.getId());
+		
+		log.info("Completed updating checksums for " + file.getId());
 	}
 
 	private boolean allDone(boolean[] completed) {
@@ -447,7 +462,7 @@ public class Network {
 				uploadBlockRandomly(fileId, block.getValue());
 			}
 		} else {
-			System.out.println(fileId + " doesn't exist locally, can't upload");
+			log.warning(fileId + " doesn't exist locally, can't upload");
 		}
 	}
 	
@@ -461,21 +476,22 @@ public class Network {
 	private void uploadBlockToPeer(String peerId, String fileId, FileBlock block) throws IOException, ProtocolException {
 		long startTime = System.currentTimeMillis();
 		
-		System.out.println("Uploading to " + peerId);
+		log.finer("Uploading " + fileId + ":" + block.getIndex() + "to " + peerId);
+		
 		//get the block off of the peer
 		//IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), tracker, fileManager);
 		IPeer peer = peerManager.openConnection(peerId);
 		
 		if (peer != null) {
-		
-			System.out.println("Uploading block: " + fileId + ":" + block.getIndex());
+			
 			peer.sendBlock(fileId, block);
 			
 			long time = System.currentTimeMillis() - startTime;
 			
-			System.out.println("Upload for " + fileId + ":" + block.getIndex() + " took " + 
+			log.finest("Upload for " + fileId + ":" + block.getIndex() + " took " + 
 					time + "ms " + ((double)time)/block.getContent().length + "B/ms");
 		} else {
+			log.severe("Error connecting to peer: " + peerId);
 			throw new IOException("Error connecting to peer: " + peerId);
 		}
 	}
@@ -506,7 +522,7 @@ public class Network {
 				
 				return peerId;
 			} catch (IOException e) {
-				System.err.println(peerId + " was unreachable");
+				log.warning(peerId + " was unreachable");
 				
 				peers.remove(peerId);
 				
@@ -514,11 +530,65 @@ public class Network {
 					break;
 				}
 			} catch (ProtocolException e) {
-				System.err.println(e.getMessage());
+				log.warning("Protocol exception with peer " + peerId + " : " + e.getMessage());
 				
 				peers.remove(peerId);
 				
 				if (peers.size() == 0) {
+					break;
+				}
+			}
+		}
+		throw new NoValidPeersException();
+	}
+	
+	/**
+	 * Download a file block from a the network (doesn't include decrpytion).
+	 * @param fileId The id of the file.
+	 * @param block The index of the block.
+	 * @return The downloaded block.
+	 * @throws NoValidPeersException If no peer will serve the file.
+	 */
+	public FileBlock downloadBlock(String fileId, int block) throws NoValidPeersException {
+		//fetch the file from the network
+		
+		long startTime = System.currentTimeMillis();
+		
+		Random r = new Random();
+		Collection<String> peerIds = tracker.findBlock(fileId, block);
+		String peerId = null;
+		
+		//loop until we get the block or run out of peers
+		while (!peerIds.isEmpty()) {
+			try {
+				//choose a random peer
+				peerId = peerIds.toArray(new String[peerIds.size()])[r.nextInt(peerIds.size())];
+				
+				//InetSocketAddress addr = t.getHostForPeer(peerId);
+				
+				IPeer peer = peerManager.openConnection(peerId);
+				
+				//get the block off of the peer
+				//IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
+				
+				log.finer("Requesting block: " + fileId + ":" + block + " from " + peer.getId());
+				FileBlock out = peer.requestBlock(fileId, block);
+				
+				long time = System.currentTimeMillis() - startTime;
+				
+				log.finest("Fetch for " + fileId + ":" + block + " took " + 
+						time + "ms " + ((double)time)/out.getContent().length + "B/ms");
+				
+				fileManager.registerBlock(fileId, out);
+				tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), fileId, block);
+				
+				
+				return out;
+			} catch (Exception e) {
+				log.warning("Peer " + peerId + " caused " + e.getMessage());
+				peerIds.remove(peerId);
+				
+				if (peerIds.size() == 0) {
 					break;
 				}
 			}
@@ -531,7 +601,7 @@ public class Network {
 	}
 	
 	public InputStream fetchFile(String fileId) {
-		return new ReticulateFileStream(fileId, 5, auth, keyStore, tracker, fileManager, peerManager);
+		return new ReticulateFileStream(fileId, 5, this, auth, keyStore, tracker, fileManager, peerManager);
 	}
 
 	
@@ -610,6 +680,7 @@ public class Network {
 	}
 
 	public void shutdown() {
+		worker.stop();
 		peerManager.closeConnections();
 	}
 }

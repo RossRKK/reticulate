@@ -11,6 +11,7 @@ import org.web3j.crypto.Credentials;
 import xyz.reticulate.exception.KeyException;
 import xyz.reticulate.exception.NoValidPeersException;
 import xyz.reticulate.exception.ProtocolException;
+import xyz.reticulate.lib.Reference;
 
 /**
  * This is a class that provides all the same functionality as the network class but will report pending operations as completed.
@@ -44,7 +45,7 @@ public class CachedNetwork extends Network {
 			//remove this from the cache, it may change later
 			cache.remove(id);
 			
-			System.out.println("Finished register operation for " + id + " it took " + (System.currentTimeMillis() - startTime) + "ms");
+			log.info("Finished register operation for " + id + " it took " + (System.currentTimeMillis() - startTime) + "ms");
 		});
 		
 		t.start();
@@ -52,25 +53,28 @@ public class CachedNetwork extends Network {
 	
 	@Override
 	public void updateFileContent(String fileId, byte[] bytes) throws KeyException, NoSuchAlgorithmException, NoValidPeersException {
-		cache.put(fileId, bytes);
-		long startTime = System.currentTimeMillis();
-
-		Thread t = new Thread(() -> {
-			//kick off the registration
-			try {
-				super.updateFileContent(fileId, bytes);
-			} catch (NoSuchAlgorithmException | KeyException 
-					| NoValidPeersException e) {
-				e.printStackTrace();
-			}
-			
-			//remove this from the cache, it may change later
-			cache.remove(fileId);
-			
-			System.out.println("Finished write operation for " + fileId + " it took " + (System.currentTimeMillis() - startTime) + "ms");
-		});
-
-		t.start();
+		//predict whether the operation will succeed
+		if (auth.getAccessLevel(fileId, creds.getAddress()) >= Reference.WRITE) {
+			cache.put(fileId, bytes);
+			long startTime = System.currentTimeMillis();
+	
+			Thread t = new Thread(() -> {
+				//kick off the registration
+				try {
+					super.updateFileContent(fileId, bytes);
+				} catch (NoSuchAlgorithmException | KeyException 
+						| NoValidPeersException e) {
+					e.printStackTrace();
+				}
+				
+				//remove this from the cache, it may change later
+				cache.remove(fileId);
+				
+				log.info("Finished write operation for " + fileId + " it took " + (System.currentTimeMillis() - startTime) + "ms");
+			});
+	
+			t.start();
+		}
 	}
 	
 	@Override
@@ -80,6 +84,12 @@ public class CachedNetwork extends Network {
 		} else {
 			return super.fetchFile(fileId);
 		}
+	}
+	
+	@Override
+	public void shutdown() {
+		//TODO ensure that all write operations complete before shutting down
+		super.shutdown();
 	}
 
 }

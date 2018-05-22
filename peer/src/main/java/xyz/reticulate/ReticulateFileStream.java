@@ -31,6 +31,8 @@ public class ReticulateFileStream extends InputStream {
 	 */
 	private IAuthenticator auth;
 	
+	private Network net;
+	
 	/**
 	 * The file that this stream reads from.
 	 */
@@ -83,7 +85,8 @@ public class ReticulateFileStream extends InputStream {
 	
 	private PeerManager pm;
 	
-	public ReticulateFileStream(String fileId, int preloadDistance, IAuthenticator auth, IDecrypter decrypter, ITracker tracker, FileManager fm, PeerManager pm) {
+	public ReticulateFileStream(String fileId, int preloadDistance, Network net, IAuthenticator auth, IDecrypter decrypter, ITracker tracker, FileManager fm, PeerManager pm) {
+		this.net = net;
 		this.auth = auth;
 		this.fileId = fileId;
 		fileLength = auth.getFileLength(fileId);
@@ -133,7 +136,7 @@ public class ReticulateFileStream extends InputStream {
 	 */
 	private void startFetcher() {
 		//start up a new block fetcher
-		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, auth, fileContent, decrypter, tracker, fm, pm);
+		BlockFetcher bf = new BlockFetcher(fileId, nextFetchIndex, net, auth, fileContent, decrypter, tracker, fm, pm);
 		fetchers.put(nextFetchIndex, bf);
 		new Thread(bf).start();
 		nextFetchIndex++;
@@ -189,6 +192,8 @@ class  BlockFetcher implements Runnable {
 	
 	private IAuthenticator auth;
 	
+	private Network net;
+	
 	private String fileId;
 	
 	private int index;
@@ -207,8 +212,9 @@ class  BlockFetcher implements Runnable {
 	
 	private boolean hasFailed;
 	
-	BlockFetcher(String fileId, int index, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker, FileManager fm, PeerManager pm) {
+	BlockFetcher(String fileId, int index, Network net, IAuthenticator auth, HashMap<Integer, FileBlock> fileContent, IDecrypter d, ITracker tracker, FileManager fm, PeerManager pm) {
 		this.auth = auth;
+		this.net = net;
 		this.fileId = fileId;
 		this.index = index;
 		this.fileContent = fileContent;
@@ -310,49 +316,7 @@ class  BlockFetcher implements Runnable {
 			//return the local file if we have it
 			return local;
 		} else {
-			//fetch the file from the network
-			
-			long startTime = System.currentTimeMillis();
-			
-			Random r = new Random();
-			Collection<String> peerIds = t.findBlock(fileId, block);
-			String peerId = null;
-			
-			//loop until we get the block or run out of peers
-			while (!peerIds.isEmpty()) {
-				try {
-					//choose a random peer
-					peerId = peerIds.toArray(new String[peerIds.size()])[r.nextInt(peerIds.size())];
-					
-					//InetSocketAddress addr = t.getHostForPeer(peerId);
-					
-					IPeer peer = pm.openConnection(peerId);
-					
-					//System.out.println("Fetching from: " + addr.getHostName());
-					System.out.println("Fetching from: " + peer.getId());
-					//get the block off of the peer
-					//IPeer peer = new NetworkPeer(new Socket(addr.getHostName(), addr.getPort()), t, fm);
-					
-					System.out.println("Requesting block: " + fileId + ":" + block);
-					FileBlock out = peer.requestBlock(fileId, block);
-					
-					long time = System.currentTimeMillis() - startTime;
-					
-					System.out.println("Fetch for " + fileId + ":" + index + " took " + 
-							time + "ms " + ((double)time)/out.getContent().length + "B/ms");
-					
-					
-					return out;
-				} catch (Exception e) {
-					System.err.println(e.getMessage());
-					peerIds.remove(peerId);
-					
-					if (peerIds.size() == 0) {
-						break;
-					}
-				}
-			}
-			throw new NoValidPeersException();
+			return net.downloadBlock(fileId, block);
 		}
 	}
 	

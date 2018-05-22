@@ -33,6 +33,8 @@ public class PeerManager implements Runnable {
 	private FileManager fm;
 
 	private ITracker t;
+	
+	private ServerSocket ss;
 
 	public PeerManager(int port, ITracker t, FileManager fm) {
 		this.port = port;
@@ -92,11 +94,17 @@ public class PeerManager implements Runnable {
 		for (Entry<String, IPeer> e:connectedPeers.entrySet()) {
 			e.getValue().disconnect();
 		}
+		
+		try {
+			ss.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 	}
 	
 	@Override
 	public void run() {
-		ServerSocket ss = null;
+		ss = null;
 		try {
 			ss = new ServerSocket(port);
 			

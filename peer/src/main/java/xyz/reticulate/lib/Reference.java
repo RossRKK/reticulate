@@ -20,4 +20,9 @@ public class Reference {
 	public static final String AES_CIPHER = "AES";
 
 	public static final int DEFAULT_REDUNDANCY = 2;
+
+	public static final int ADMIN = 3;
+	public static final int WRITE = 2;
+	public static final int READ = 1;
+	
 }

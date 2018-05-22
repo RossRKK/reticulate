@@ -53,6 +53,8 @@ public class BindableIO implements Runnable {
 	private BlockingQueue<String> lineQueue = new LinkedBlockingQueue<String>();
 	
 
+	private Thread reader;
+	
 	/**
 	 * Create a new bindable io stream.
 	 * @param in The underlying input stream.
@@ -62,7 +64,8 @@ public class BindableIO implements Runnable {
 		this.in = new Scanner(in);
 		this.out = new PrintWriter(out);
 
-		new Thread(this).start();
+		reader = new Thread(this);
+		reader.start();
 	}
 	
 	/**
@@ -212,6 +215,13 @@ public class BindableIO implements Runnable {
 			//otherwise remove the id from elsewhere in the queue
 			((LinkedList<String>)bindQueue).remove(id);
 		}
+	}
+	
+	public void close() {
+		in.close();
+		out.close();
+		
+		reader.interrupt();
 	}
 
 }

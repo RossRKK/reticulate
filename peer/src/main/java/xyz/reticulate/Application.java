@@ -45,6 +45,8 @@ public class Application {
 	 */
 	private static PropertiesManager pm = new PropertiesManager();
 	
+	private static SparkServer web;
+	
 	public static void main(String[] args) throws IOException, ProtocolException, KeyException {
 			String configPath = args.length > 0 ? args[0] : Reference.CONFIG_PATH;
 			
@@ -53,10 +55,11 @@ public class Application {
 				try {
 					Credentials creds = WalletUtils.loadCredentials(pm.getWalletPass(), pm.getWalletPath());
 					net = new CachedNetwork(creds, pm.getContractAddress());
+					//net = new Network(creds, pm.getContractAddress());
 					
 					IUsers users = new EthUsers(creds, pm.getUserContractAddress());
 					
-					SparkServer web = new SparkServer(net, users);
+					web = new SparkServer(net, users);
 					
 					if (Desktop.isDesktopSupported()) {
 					    try {
@@ -183,9 +186,9 @@ public class Application {
 		
 		net.shutdown();
 		
-		sc.close();
+		web.shutdown();
 		
-		System.exit(0);
+		sc.close();
 	}
 	
 	private static void listPeers(List<PeerInfo> peers) {

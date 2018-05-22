@@ -157,6 +157,7 @@ public class NetworkPeer implements IPeer {
 			FileBlock block = readBlock(Integer.parseInt(id[1]), bindId);
 			
 			fm.registerBlock(id[0], block);
+			t.registerTransfer(Application.getPropertiesManager().getPeerId(), id[0], block.getIndex());
 		} catch (ArrayIndexOutOfBoundsException | NumberFormatException | ProtocolException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -342,6 +343,7 @@ public class NetworkPeer implements IPeer {
 			
 			FileBlock block = readBlock(index, bindId);
 			
+			
 			io.unbind(bindId);
 			
 			return block;
@@ -397,6 +399,7 @@ public class NetworkPeer implements IPeer {
 	public void disconnect() {
 		try {
 			s.close();
+			io.close();
 			System.out.println("Closed connection to: " + id);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

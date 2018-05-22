@@ -9,13 +9,12 @@ import static spark.Spark.path;
 import static spark.Spark.post;
 import static spark.Spark.put;
 import static spark.Spark.staticFiles;
+import static spark.Spark.stop;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
@@ -301,4 +300,8 @@ public class SparkServer {
 	private Route getUserRootDirByAddr = (req, res) -> {
 		return users.getRootDirForUser(req.params(":address"));
 	};
+
+	public void shutdown() {
+		stop();
+	}
 }
