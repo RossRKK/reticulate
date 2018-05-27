@@ -62,8 +62,6 @@ var Model = (function () {
                     rootDir = result;
 
                     View.setRootDir(rootDir);
-
-                    openDirectory(rootDir);
                 });
             } else {
                 //allow the user to register
@@ -121,79 +119,6 @@ var Model = (function () {
         copyToClipboard(key);
     }
 
-    //open an entry in the
-    function openEntry(entry) {
-        if (entry.type === DIR) {
-            breadCrumbs.push(entry);
-
-            openDirectory(entry.id);
-        } else {
-            //download the file
-            window.open(Reticulate.Net.getDomain() + FILE_PATH + entry.id);
-        }
-    }
-
-    //open a directory
-    async function openDirectory(dirId) {
-        if (dirId !== "") {
-            let dirContent = await Reticulate.Net.getFile(dirId);
-
-            currentDir = new Reticulate.Directory.dir(dirId, dirContent);
-
-            View.displayDirectory(currentDir);
-        }
-    }
-
-    function addFileEntry(file) {
-        let reader = new FileReader();
-
-        reader.onload = async function (event) {
-
-            //let fileId = await Reticulate.Net.addFile(new Uint8Array(event.target.result));
-            let content = event.target.result.split(',')[1]; //remove data:*/*;base64
-
-            //do a file write operation if the file matches the name of one already in the directory
-            let matchingEntry = currentDir.getFileId(file.name)
-            if (matchingEntry == null) {
-
-                let fileId = await Reticulate.Net.addFile(content);
-                //let fileId = await Reticulate.Net.addFile(event.target.result);
-                console.log("File ID: " + fileId);
-
-                let entry = new Reticulate.Directory.entry(file.name, FILE, fileId);
-                currentDir.addEntry(entry);
-            } else {
-                //don't over wirte directories
-                if (matchingEntry.type === FILE) {
-                    if (confirm("This will overwrite an existing file")) {
-                        await Reticulate.Net.updateFile(matchingEntry.id, content);
-                    }
-                } else {
-                    alert("Overwriting directories isn't supported");
-                    //TODO allow overwriting directories?
-                }
-            }
-
-            View.displayDirectory(currentDir);
-        };
-
-        View.startFileUpdate();
-        reader.readAsDataURL(file);
-    }
-
-    async function mkdir(name) {
-        let fileId = await Reticulate.Net.addFile(btoa("../" + DIR + "/" + currentDir.id + "\n"));
-        let dir = new Reticulate.Directory.entry(name, DIR, fileId);
-        currentDir.addEntry(dir);
-
-        View.displayDirectory(currentDir);
-    }
-
-    function removeEntry(id) {
-        currentDir.removeEntry(id);
-        View.displayDirectory(currentDir);
-    }
-
     async function registerUsername(username) {
         let isTaken = await Reticulate.Users.isUserNameTaken(username);
 
@@ -221,10 +146,6 @@ var Model = (function () {
         copyPeer,
         copyAddr,
         copyKey,
-        openEntry,
-        addFileEntry,
-        mkdir,
-        removeEntry,
         registerUsername,
     }
 })();
@@ -290,13 +211,6 @@ var View = (function () {
         document.getElementById("file-download").href = "/file/" + fileId;
     }
 
-    function setUsername(username) {
-        $("#username").text(username);
-    }
-
-    function setRootDir(rootDir) {
-        $("#rootDir").text(rootDir);
-    }
 
     //function for making icons
     function makeIconCol(faIcon) {
@@ -315,91 +229,6 @@ var View = (function () {
         });
     }
 
-    function displayDirectory(dir) {
-        clearDirectroyEntries();
-
-        //update the view with the contents of the current directory
-        dir.entries.forEach(addDirectroyEntry);
-
-        /*<div class="list-group-item list-group-item-action centered">
-            <i class="fas fa-lg fa-plus"></i>
-        </div>*/
-        let listItem = $("<div>", {
-            id: "addFile",
-            class: "list-group-item text-center",
-        });
-
-        listItem.html("Drop files here to upload<br>");
-        listItem.append(makeIcon("fas fa-lg fa-plus"));
-
-        listItem.on("dragover", Controller.dragOverHandler);
-        listItem.on("drop", Controller.dropHandler);
-
-        $("#dir-entries").append(listItem);
-    }
-
-    function addDirectroyEntry(entry) {
-        /*<div class="list-group-item list-group-item-action">
-            <div class="row">
-                <div class="col-1"><i class="far fa-folder"></i></div>
-                <div class="col-8">Example File</div>
-                <div class="col-1"><i class="icon fa fa-edit"></i></div>
-                <div class="col-1"><i class="icon fa fa-share-square"></i></div>
-                <div class="col-1"><i class="icon fa fa-cog"></i></div>
-            </div>
-        </div>*/
-
-        let listItem = $("<div>", {
-            id: "dir-entry-" + entry.id,
-            class: "list-group-item list-group-item-action",
-        });
-
-
-
-        $("#dir-entries").append(listItem);
-
-        let row = $("<div>", {
-            class: "row",
-        });
-
-        listItem.append(row);
-
-        row.append(makeIconCol("far " + (entry.type === DIR ? "fa-folder" : "fa-file")));
-
-        let nameCol = $("<div>", {
-            class: "col-8 border-right pointer",
-            "data-id": entry.id,
-            "data-type": entry.type,
-            "data-name": entry.name,
-        });
-        nameCol.on("click", Controller.openEntry);
-
-        row.append(nameCol);
-
-        let name = $("<div>");
-        name.text(entry.name);
-
-        nameCol.append(name);
-
-        row.append(makeIconCol("icon fa fa-share-square"));
-        row.append(makeIconCol("icon fa fa-cog"));
-
-        let deleteIcon = makeIconCol("icon fa fa-times");
-        deleteIcon.attr('data-id', entry.id);
-        deleteIcon.on("click", Controller.deleteEntry);
-        row.append(deleteIcon);
-    }
-
-    function clearDirectroyEntries() {
-        $("#dir-entries").empty();
-    }
-
-    function startFileUpdate() {
-        let addFile = $("#addFile");
-        addFile.empty();
-        addFile.append(makeIcon("fas fa-lg fa-spin fa-spinner"));
-    }
-
     function switchToRegisterUsername() {
         //hide the
         $("#userExists").hide();
@@ -412,6 +241,15 @@ var View = (function () {
         $("#username-btn").append(makeIcon("fas fa-lg fa-spin fa-spinner"));
     }
 
+    function setUsername(username) {
+        $("#username").text(username);
+    }
+
+    function setRootDir(rootDir) {
+        $("#rootDir").text(rootDir);
+    }
+
+
     return {
         setPeerId,
         setUserAddress,
@@ -420,8 +258,6 @@ var View = (function () {
         updateFileId,
         setRootDir,
         setUsername,
-        displayDirectory,
-        startFileUpdate,
         switchToRegisterUsername,
         usernameSpinner,
     }
@@ -437,8 +273,6 @@ var Controller = (function () {
         $("#copy-peer").on("click", Model.copyPeer);
         $("#copy-addr").on("click", Model.copyAddr);
         $("#copy-key").on("click", Model.copyKey);
-
-        $("#mkdir").on("click", mkdir);
 
         $("#username-in").on("change keypress", updateUsername);
         $("#username-btn").on("click", submitUsername);
@@ -467,13 +301,6 @@ var Controller = (function () {
         }
     }
 
-    function mkdir() {
-        let name = prompt("Enter new directory name:");
-        if (name) {
-            Model.mkdir(name);
-        }
-    }
-
     function handleFileId(e) {
         let fileId = $("#file-id-in").val();
         if (fileId) {
@@ -481,64 +308,9 @@ var Controller = (function () {
         }
     }
 
-    function dropHandler(e) {
-        e = e.originalEvent;
-
-        // Prevent default behavior (Prevent file from being opened)
-        e.preventDefault();
-
-        if (e.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the file(s)
-            for (var i = 0; i < e.dataTransfer.items.length; i++) {
-                // If dropped items aren't files, reject them
-                if (e.dataTransfer.items[i].kind === 'file') {
-                    var file = e.dataTransfer.items[i].getAsFile();
-
-                    Model.addFileEntry(file);
-                }
-            }
-        } else {
-            // Use DataTransfer interface to access the file(s)
-            for (var i = 0; i < e.dataTransfer.files.length; i++) {
-                Model.addFile(e.dataTransfer.files[i]);
-            }
-        }
-
-        // Pass event to removeDragData for cleanup
-        removeDragData(e)
-    }
-
-    function removeDragData(e) {
-
-        if (e.dataTransfer.items) {
-            // Use DataTransferItemList interface to remove the drag data
-            e.dataTransfer.items.clear();
-        } else {
-            // Use DataTransfer interface to remove the drag data
-            e.dataTransfer.clearData();
-        }
-    }
-
-    function dragOverHandler(e) {
-        e.preventDefault();
-    }
-
-    function openEntry(e) {
-        //open the clicked entry
-        let entry = new Reticulate.Directory.entry(e.currentTarget.dataset.name, e.currentTarget.dataset.type, e.currentTarget.dataset.id)
-        Model.openEntry(entry);
-    }
-
-    function deleteEntry(e) {
-        console.log(e)
-        Model.removeEntry(e.currentTarget.dataset.id);
-    }
 
     return {
         init,
-        dropHandler,
-        dragOverHandler,
-        openEntry,
-        deleteEntry,
+        handleFileId,
     }
 })();

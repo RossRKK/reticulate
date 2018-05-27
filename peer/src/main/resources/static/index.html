@@ -61,34 +61,6 @@
                     <div class="col-1"><i class="fas fa-lg fa-folder"></i></div>
                     <div class="col-5" id="rootDir">Loading...</div>
                 </div>
-
-                <hr>
-
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item active" aria-current="page"><i class="far fa-hdd"></i></li>
-                    </ol>
-                </nav>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col">
-                                <div>
-                                    <span class="icon fa-layers fa-fw" id="mkdir">
-                                        <i class="far fa-folder"></i>
-                                        <i class="fas fa-plus"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="list-group list-group-flush" id="dir-entries">
-                        <div class="list-group-item list-group-item-action text-center">
-                            <i class="fas fa-lg fa-spin fa-spinner"></i>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div id="registerUser" class="hidden">
@@ -114,7 +86,7 @@
             <hr>
 
             <div>
-                <h3>Advanced Options</h3>
+                <h3>Files</h3>
                 <div class="row">
                     <div class="col-1">File ID: </div>
                     <div class="col-5"><input style="width: 100%" id="file-id-in" type="text"></input></div>
@@ -128,30 +100,9 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
-              Launch demo modal
-            </button>
+
         </div>
 
-        <!-- Modal -->
-        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        ...
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save changes</button>
-                    </div>
-                </div>
-            </div>
         </div>
     </body>
 </html>
