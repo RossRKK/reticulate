@@ -15,14 +15,6 @@ var Reticulate = (function () {
     //the domain these requests should be sent to
     let domain = "http://local.reticulate.xyz:4567";
 
-    let username = "test";
-
-    let password = "test";
-
-    function getAuthHeader() {
-        return "Basic " + btoa(username + ":" + password);
-    }
-
     function setDomain(d) {
         domain = d;
     }
@@ -38,9 +30,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/peer/id",
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -49,9 +38,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/peer/addr",
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -60,9 +46,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/peer/key",
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -82,9 +65,6 @@ var Reticulate = (function () {
                 method: "POST",
                 contentType: "application/base64",
                 data: content,
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -93,9 +73,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId),
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -105,9 +82,6 @@ var Reticulate = (function () {
                 url: domain + "/file/" + encodeURIComponent(fileId),
                 method: "PUT",
                 data: content,
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -116,9 +90,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId),
                 method: "DELETE",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -127,9 +98,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share?userAddress=" + encodeURIComponent(userAddress) + "&userKey=" + encodeURIComponent(userKey) + "&accessLevel=" + encodeURIComponent(accessLevel),
                 method: "POST",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -138,9 +106,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress),
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -149,9 +114,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress),
                 method: "DELETE",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -160,9 +122,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress) + "&accessLevel=" + encodeURIComponent(accessLevel),
                 method: "PUT",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -191,9 +150,6 @@ var Reticulate = (function () {
                 return (await $.ajax({
                     url: domain + "/user?username=" + encodeURIComponent(username) + "&userKey=" + encodeURIComponent(userKey) + "&rootDir=" + encodeURIComponent(rootDir),
                     method: "POST",
-                    headers: {
-                        "Authorization": getAuthHeader(),
-                    },
                 })) == "true";
             } else {
                 return false;
@@ -213,9 +169,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/user/name/" + encodeURIComponent(username) + "/addr",
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -223,9 +176,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/user/addr/" + encodeURIComponent(addr) + "/username",
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -234,9 +184,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + path + encodeURIComponent(nameOrAddr) + "/key",
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -245,9 +192,6 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + path + encodeURIComponent(nameOrAddr) + "/rootDir",
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             });
         }
 
@@ -255,9 +199,6 @@ var Reticulate = (function () {
             return (await $.ajax({
                 url: domain + "/user/" + encodeURIComponent(username),
                 method: "GET",
-                headers: {
-                    "Authorization": getAuthHeader(),
-                },
             })) == "true";
         }
 
