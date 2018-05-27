@@ -36,6 +36,8 @@ public class Worker implements Runnable {
 	private ITracker t;
 	
 	private IAuthenticator auth;
+	
+	private Thread thread;
 
 	public Worker(Network net, IAuthenticator auth, FileManager fm, ITracker t, int redun) {
 		super();
@@ -46,10 +48,14 @@ public class Worker implements Runnable {
 		this.fm = fm;
 		this.auth = auth;
 		active = true;
+		
+		thread = new Thread(this);
+		thread.start();
 	}
 	
 	public void stop() {
 		active = false;
+		thread.interrupt();
 	}
 
 
@@ -60,7 +66,7 @@ public class Worker implements Runnable {
 			try {
 				Thread.sleep(INTERVAL);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				break;
 			}
 			
 			

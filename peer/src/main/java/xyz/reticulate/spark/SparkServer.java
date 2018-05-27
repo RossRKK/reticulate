@@ -42,6 +42,9 @@ public class SparkServer {
 					return true;
 				}
 			}
+		} else {
+			//this isn't a cross origin so it should be allowed
+			return true;
 		}
 		
 		return false;
@@ -86,6 +89,7 @@ public class SparkServer {
 			if (isTrusted(host)) {
 				response.header("Access-Control-Allow-Origin", host);
 			} else {
+				System.out.println(host);
 				halt(401);
 			}
 		});
@@ -218,7 +222,8 @@ public class SparkServer {
 	 */
 	private Route writeFile = (req, res) -> {
 		//register the file with the network
-		net.updateFileContent(req.params(":fileId"), Base64.getDecoder().decode(req.body()));
+		//net.updateFileContent(req.params(":fileId"), Base64.getDecoder().decode(req.body()));
+		net.updateFileContent(req.params(":fileId"), req.bodyAsBytes());
 		return "Success";
 	};
 	

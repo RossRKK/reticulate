@@ -129,7 +129,6 @@ public class Network {
 		
 		//start up the worker thread
 		worker = new Worker(this, auth, fileManager, tracker, Reference.DEFAULT_REDUNDANCY);
-		new Thread(worker).start();
 		
 		try {
 			startTraversal();
