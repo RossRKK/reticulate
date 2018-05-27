@@ -31,13 +31,6 @@
                 <div class="col-11"><h1>Reticulate</h1></div>
                 <!--<div class="col-1"><i class="icon fas fa-2x fa-upload"></i></div>-->
             </div>
-            <hr>
-            <div class="row">
-                <div class="col-1"><i class="fas fa-lg fa-user"></i></div>
-                <div class="col-5" id="username">Loading...</div>
-                <div class="col-1"><i class="fas fa-lg fa-folder"></i></div>
-                <div class="col-5" id="rootDir">Loading...</div>
-            </div>
 
             <hr>
 
@@ -60,28 +53,56 @@
 
             <hr>
 
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item active" aria-current="page"><i class="far fa-hdd"></i></li>
-                </ol>
-            </nav>
+            <div id="userExists">
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col">
-                            <div>
-                                <span class="icon fa-layers fa-fw" id="mkdir">
-                                    <i class="far fa-folder"></i>
-                                    <i class="fas fa-plus"></i>
-                                </span>
+                <div class="row">
+                    <div class="col-1"><i class="fas fa-lg fa-user"></i></div>
+                    <div class="col-5" id="username">Loading...</div>
+                    <div class="col-1"><i class="fas fa-lg fa-folder"></i></div>
+                    <div class="col-5" id="rootDir">Loading...</div>
+                </div>
+
+                <hr>
+
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item active" aria-current="page"><i class="far fa-hdd"></i></li>
+                    </ol>
+                </nav>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col">
+                                <div>
+                                    <span class="icon fa-layers fa-fw" id="mkdir">
+                                        <i class="far fa-folder"></i>
+                                        <i class="fas fa-plus"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <div class="list-group list-group-flush" id="dir-entries">
+                        <div class="list-group-item list-group-item-action text-center">
+                            <i class="fas fa-lg fa-spin fa-spinner"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="list-group list-group-flush" id="dir-entries">
-                    <div class="list-group-item list-group-item-action text-center">
-                        <i class="fas fa-lg fa-spin fa-spinner"></i>
+            </div>
+
+            <div id="registerUser" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        Register User Name
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group mb-3">
+                            <input id="username-in" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon2">
+                            <div class="input-group-append">
+                                <button id="username-btn" class="btn btn-outline-danger" type="button">Submit</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,7 +110,7 @@
             <hr>
 
             <div>
-                <h3>Download/Modify File</h3>
+                <h3>Advanced Options</h3>
                 <div class="row">
                     <div class="col-1">File ID: </div>
                     <div class="col-5"><input style="width: 100%" id="file-id-in" type="text"></input></div>

@@ -49,23 +49,26 @@ var Model = (function () {
             peerId = result;
             View.setPeerId(peerId);
         });
-        Reticulate.Peer.addr().then(function (result) {
+        Reticulate.Peer.addr().then(async function (result) {
             addr = result;
             View.setUserAddress(addr);
 
-            //get the users username
-            Reticulate.Users.getUserNameForAddress(addr).then(function (result) {
-                username = result;
-                View.setUsername(result);
-            });
-            //get the users root dir
-            Reticulate.Users.getRootDirForUser(addr, true).then(async function (result) {
-                rootDir = result;
+            username = await Reticulate.Users.getUserNameForAddress(addr);
+            View.setUsername(username);
 
-                View.setRootDir(rootDir);
+            if (username) {
+                //get the users root dir
+                Reticulate.Users.getRootDirForUser(addr, true).then(async function (result) {
+                    rootDir = result;
 
-                openDirectory(rootDir);
-            });
+                    View.setRootDir(rootDir);
+
+                    openDirectory(rootDir);
+                });
+            } else {
+                //allow the user to register
+                View.switchToRegisterUsername();
+            }
         });
         Reticulate.Peer.key().then(function (result) {
             key = result;
@@ -191,6 +194,27 @@ var Model = (function () {
         View.displayDirectory(currentDir);
     }
 
+    async function registerUsername(username) {
+        let isTaken = await Reticulate.Users.isUserNameTaken(username);
+
+        if (isTaken) {
+            alert("Username is already taken, choose another");
+        } else {
+            $("#username-btn").off("click");
+
+            View.usernameSpinner();
+
+            //this bit should really be in the model
+            if (await Reticulate.Users.registerCurrentUser(username)) {
+
+                //reinitialise the model after registration succeeds
+                Model.init();
+            } else {
+                alert("Registration failed");
+            }
+        }
+    }
+
     return {
         init,
         updateFileId,
@@ -201,6 +225,7 @@ var Model = (function () {
         addFileEntry,
         mkdir,
         removeEntry,
+        registerUsername,
     }
 })();
 
@@ -375,6 +400,18 @@ var View = (function () {
         addFile.append(makeIcon("fas fa-lg fa-spin fa-spinner"));
     }
 
+    function switchToRegisterUsername() {
+        //hide the
+        $("#userExists").hide();
+
+        $("#registerUser").show();
+    }
+
+    function usernameSpinner() {
+        $("#username-btn").empty();
+        $("#username-btn").append(makeIcon("fas fa-lg fa-spin fa-spinner"));
+    }
+
     return {
         setPeerId,
         setUserAddress,
@@ -385,6 +422,8 @@ var View = (function () {
         setUsername,
         displayDirectory,
         startFileUpdate,
+        switchToRegisterUsername,
+        usernameSpinner,
     }
 })();
 
@@ -400,6 +439,32 @@ var Controller = (function () {
         $("#copy-key").on("click", Model.copyKey);
 
         $("#mkdir").on("click", mkdir);
+
+        $("#username-in").on("change keypress", updateUsername);
+        $("#username-btn").on("click", submitUsername);
+    }
+
+    async function submitUsername() {
+        let username = $("#username-in").val();
+
+        Model.registerUsername(username);
+    }
+
+    //update the colour of the username button
+    async function updateUsername(e) {
+        let username = $("#username-in").val();
+
+        //this bit should really be in the model
+        let isTaken = username ? await Reticulate.Users.isUserNameTaken(username) : true;
+
+        //tghis bit should really be in the view
+        if (!isTaken) {
+            $("#username-btn").removeClass("btn-outline-danger");
+            $("#username-btn").addClass("btn-outline-success");
+        } else {
+            $("#username-btn").removeClass("btn-outline-success");
+            $("#username-btn").addClass("btn-outline-danger");
+        }
     }
 
     function mkdir() {

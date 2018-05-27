@@ -163,10 +163,10 @@ public class PropertiesManager {
 			prop.setProperty("walletPath", "" + walletPath);
 			prop.setProperty("walletPass", walletPass);
 			
-			askForUsernameAndPassword(sc);
+			/*askForUsernameAndPassword(sc);
 			
 			prop.setProperty("webUsername", webUsername);
-			prop.setProperty("webPassword", webPassword);
+			prop.setProperty("webPassword", webPassword);*/
 			
 			sc.close();
 			

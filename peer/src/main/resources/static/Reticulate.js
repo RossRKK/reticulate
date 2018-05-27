@@ -12,7 +12,16 @@ const ROOT_DIR = "../dir/\n";
 
 var Reticulate = (function () {
 
+    //the domain these requests should be sent to
     let domain = "http://local.reticulate.xyz:4567";
+
+    let username = "test";
+
+    let password = "test";
+
+    function getAuthHeader() {
+        return "Basic " + btoa(username + ":" + password);
+    }
 
     function setDomain(d) {
         domain = d;
@@ -28,7 +37,10 @@ var Reticulate = (function () {
         async function peerId() {
             return await $.ajax({
                 url: domain + "/peer/id",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -36,7 +48,10 @@ var Reticulate = (function () {
         async function addr() {
             return await $.ajax({
                 url: domain + "/peer/addr",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -44,7 +59,10 @@ var Reticulate = (function () {
         async function key() {
             return await $.ajax({
                 url: domain + "/peer/key",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -63,7 +81,10 @@ var Reticulate = (function () {
                 url: domain + "/file",
                 method: "POST",
                 contentType: "application/base64",
-                data: content
+                data: content,
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -71,7 +92,10 @@ var Reticulate = (function () {
         async function getFile(fileId) {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId),
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -80,7 +104,10 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId),
                 method: "PUT",
-                data: content
+                data: content,
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -88,7 +115,10 @@ var Reticulate = (function () {
         async function deleteFile(fileId) {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId),
-                method: "DELETE"
+                method: "DELETE",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -96,7 +126,10 @@ var Reticulate = (function () {
         async function share(fileId, userAddress, userKey, accessLevel) {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share?userAddress=" + encodeURIComponent(userAddress) + "&userKey=" + encodeURIComponent(userKey) + "&accessLevel=" + encodeURIComponent(accessLevel),
-                method: "POST"
+                method: "POST",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -104,7 +137,10 @@ var Reticulate = (function () {
         async function getAccess(fileId, userAddress) {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress),
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -112,7 +148,10 @@ var Reticulate = (function () {
         async function revokeShare(fileId, userAddress) {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress),
-                method: "DELETE"
+                method: "DELETE",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -120,7 +159,10 @@ var Reticulate = (function () {
         async function modifyAccess(fileId, userAddress, accessLevel) {
             return await $.ajax({
                 url: domain + "/file/" + encodeURIComponent(fileId) + "/share/" + encodeURIComponent(userAddress) + "&accessLevel=" + encodeURIComponent(accessLevel),
-                method: "PUT"
+                method: "PUT",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -148,7 +190,10 @@ var Reticulate = (function () {
             if (!taken) {
                 return (await $.ajax({
                     url: domain + "/user?username=" + encodeURIComponent(username) + "&userKey=" + encodeURIComponent(userKey) + "&rootDir=" + encodeURIComponent(rootDir),
-                    method: "POST"
+                    method: "POST",
+                    headers: {
+                        "Authorization": getAuthHeader(),
+                    },
                 })) == "true";
             } else {
                 return false;
@@ -167,14 +212,20 @@ var Reticulate = (function () {
         async function getAddressForUserName(username) {
             return await $.ajax({
                 url: domain + "/user/name/" + encodeURIComponent(username) + "/addr",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
         async function getUserNameForAddress(addr) {
             return await $.ajax({
                 url: domain + "/user/addr/" + encodeURIComponent(addr) + "/username",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -182,7 +233,10 @@ var Reticulate = (function () {
             let path = isAddr ? "/user/addr/" : "/user/name/";
             return await $.ajax({
                 url: domain + path + encodeURIComponent(nameOrAddr) + "/key",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
@@ -190,14 +244,20 @@ var Reticulate = (function () {
             let path = isAddr ? "/user/addr/" : "/user/name/";
             return await $.ajax({
                 url: domain + path + encodeURIComponent(nameOrAddr) + "/rootDir",
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             });
         }
 
         async function isUserNameTaken(username) {
             return (await $.ajax({
                 url: domain + "/user/" + encodeURIComponent(username),
-                method: "GET"
+                method: "GET",
+                headers: {
+                    "Authorization": getAuthHeader(),
+                },
             })) == "true";
         }
 

@@ -4,6 +4,7 @@ import static spark.Spark.before;
 import static spark.Spark.delete;
 import static spark.Spark.exception;
 import static spark.Spark.get;
+import static spark.Spark.halt;
 import static spark.Spark.options;
 import static spark.Spark.path;
 import static spark.Spark.post;
@@ -15,12 +16,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
-
-import com.qmetric.spark.authentication.AuthenticationDetails;
-import com.qmetric.spark.authentication.BasicAuthenticationFilter;
 
 import spark.Route;
 import xyz.reticulate.Application;
@@ -33,6 +32,20 @@ public class SparkServer {
 	private Network net;
 	
 	private IUsers users;
+	
+	private HashSet<String> trustedHosts = new HashSet<String>();
+	
+	private boolean isTrusted(String host) {
+		if (host != null) {
+			for (String pattern:trustedHosts) {
+				if (host.matches(pattern)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
 
 	/**
 	 * Create a spark server.
@@ -42,37 +55,42 @@ public class SparkServer {
 		this.net = net;
 		this.users = users;
 		
+		trustedHosts.add(".+\\.reticulate\\.xyz.*");
+		
 		
 		staticFiles.location("/static");
 		
 		
-		options("/*",
-		        (request, response) -> {
+		options("/*", (request, response) -> {
+            String accessControlRequestHeaders = request
+                    .headers("Access-Control-Request-Headers");
+            if (accessControlRequestHeaders != null) {
+                response.header("Access-Control-Allow-Headers",
+                        accessControlRequestHeaders);
+            }
 
-		            String accessControlRequestHeaders = request
-		                    .headers("Access-Control-Request-Headers");
-		            if (accessControlRequestHeaders != null) {
-		                response.header("Access-Control-Allow-Headers",
-		                        accessControlRequestHeaders);
-		            }
+            String accessControlRequestMethod = request
+                    .headers("Access-Control-Request-Method");
+            if (accessControlRequestMethod != null) {
+                response.header("Access-Control-Allow-Methods",
+                        accessControlRequestMethod);
+            }
 
-		            String accessControlRequestMethod = request
-		                    .headers("Access-Control-Request-Method");
-		            if (accessControlRequestMethod != null) {
-		                response.header("Access-Control-Allow-Methods",
-		                        accessControlRequestMethod);
-		            }
-
-		            return "OK";
-		        });
+            return "OK";
+        });
 
 		before((request, response) -> {
-			response.header("Access-Control-Allow-Origin", "*");
-			//response.header("Access-Control-Allow-Credentials", "true");
+			String host = request.host();
+			
+			if (isTrusted(host)) {
+				response.header("Access-Control-Allow-Origin", host);
+			} else {
+				halt(401);
+			}
 		});
 
 		
-		before(new BasicAuthenticationFilter("*", new AuthenticationDetails(Application.getPropertiesManager().getWebUsername(), Application.getPropertiesManager().getWebPassword())));
+		//before(new BasicAuthenticationFilter("", new AuthenticationDetails(Application.getPropertiesManager().getWebUsername(), Application.getPropertiesManager().getWebPassword())));
 
 		
 		path("/peer", () -> {
