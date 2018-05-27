@@ -13,7 +13,8 @@ const ROOT_DIR = "../dir/\n";
 var Reticulate = (function () {
 
     //the domain these requests should be sent to
-    let domain = "http://local.reticulate.xyz:4567";
+    let domain = "http://localhost:4567";
+    //let domain = "http://local.reticulate.xyz:4567";
 
     function setDomain(d) {
         domain = d;

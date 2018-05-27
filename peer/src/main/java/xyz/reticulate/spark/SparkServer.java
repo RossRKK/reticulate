@@ -55,7 +55,8 @@ public class SparkServer {
 		this.net = net;
 		this.users = users;
 		
-		trustedHosts.add(".+\\.reticulate\\.xyz.*");
+		trustedHosts.add(".+\\.reticulate\\.xyz.*"); //trust all reticulate domains
+		trustedHosts.add("null"); //if the origin is a file
 		
 		
 		staticFiles.location("/static");
@@ -80,7 +81,7 @@ public class SparkServer {
         });
 
 		before((request, response) -> {
-			String host = request.host();
+			String host = request.headers("origin");
 			
 			if (isTrusted(host)) {
 				response.header("Access-Control-Allow-Origin", host);
