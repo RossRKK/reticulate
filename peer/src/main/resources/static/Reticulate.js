@@ -127,6 +127,14 @@ var Reticulate = (function () {
             });
         }
 
+        //get a users access level to a file
+        async function getUsers(fileId) {
+            return await $.ajax({
+                url: domain + "/file/" + encodeURIComponent(fileId) + "/users",
+                method: "GET",
+            });
+        }
+
         return {
             addFile,
             getFile,
@@ -138,6 +146,7 @@ var Reticulate = (function () {
             modifyAccess,
             setDomain,
             getDomain,
+            getUsers,
         }
     })();
 

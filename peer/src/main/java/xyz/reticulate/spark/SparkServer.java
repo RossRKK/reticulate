@@ -118,6 +118,8 @@ public class SparkServer {
 			
 			post("/:fileId/share", share);
 			
+			get("/:fileId/users", getUsers);
+			
 			//functions for handling sharing
 			path("/:fileId/share", () -> {
 				get("/:userAddress", getAccess);
@@ -272,6 +274,13 @@ public class SparkServer {
 			res.status(400);
 			return "Malformed access level";
 		}
+	};
+	
+	/**
+	 * Get the users who have permission to access a file.
+	 */
+	private Route getUsers = (req, res) -> {
+		return net.getAllUsersWithAccess(req.params(":fileId"));
 	};
 	
 	/**

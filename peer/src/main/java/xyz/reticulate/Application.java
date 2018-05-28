@@ -155,6 +155,12 @@ public class Application {
 				case "public-key":
 					System.out.println(Base64.getEncoder().encodeToString(net.getKeyStore().getPublicKey().getEncoded()));
 					break;
+				case "get-users":
+					List<String> users = net.getAllUsersWithAccess(sc.nextLine());
+					for(String user:users) {
+						System.out.println(user);
+					}
+					break;
 				case "exit":
 				case "quit":
 					exit = true;

@@ -103,8 +103,14 @@ contract ReticulateAuth {
         if (file.permissions[msg.sender].level >= ADMIN
             && file.permissions[msg.sender].level >= files[fileId].permissions[revokee].level) {
 
-            delete files[fileId].users[files[fileId].permissions[revokee].keyIndex];
-            delete files[fileId].permissions[revokee];
+            /*files[fileId].users[files[fileId].permissions[revokee].keyIndex] = 0x0;
+            files[fileId].permissions[revokee].key = "";
+            files[fileId].permissions[revokee].level = 0x0;
+            files[fileId].permissions[revokee].keyIndex = 0;*/
+            if (files[fileId].permissions[revokee].key.length != 0) {
+                delete files[fileId].users[files[fileId].permissions[revokee].keyIndex];
+                delete files[fileId].permissions[revokee];
+            }
         }
     }
 

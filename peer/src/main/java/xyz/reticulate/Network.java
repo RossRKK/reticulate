@@ -677,6 +677,10 @@ public class Network {
 	public int getLengthOfFile(String fileId) {
 		return auth.getFileLength(fileId);
 	}
+	
+	public List<String> getAllUsersWithAccess(String fileId) {
+		return auth.getAllUsersWithAccess(fileId);
+	}
 
 	public void shutdown() {
 		worker.stop();

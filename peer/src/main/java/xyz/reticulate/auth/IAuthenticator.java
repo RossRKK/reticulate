@@ -1,5 +1,7 @@
 package xyz.reticulate.auth;
 
+import java.util.List;
+
 import xyz.reticulate.file.ReticulateFile;
 
 /**
@@ -36,4 +38,6 @@ public interface IAuthenticator {
 	public boolean compareCheckSum(String fileId, int blockIndex, byte[] checkSum);
 	
 	public byte[] getCheckSum(String fileId, int blockIndex);
+
+	public List<String> getAllUsersWithAccess(String fileId);
 }

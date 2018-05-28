@@ -2,9 +2,12 @@ package xyz.reticulate.auth;
 
 import java.math.BigInteger;
 import java.util.Base64;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import org.web3j.abi.datatypes.Address;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
@@ -228,6 +231,18 @@ public class EthAuth implements IAuthenticator {
 			return contract.getCheckSum(fileId, BigInteger.valueOf(blockIndex)).send();
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Error getting checksum for file " + fileId, e);
+			return null;
+		}
+	}
+	
+	@Override
+	public List<String> getAllUsersWithAccess(String fileId) {
+		try {
+			List<Address> addrs = contract.getAllUsersWithAccess(fileId).send();
+			List<String> out = addrs.parallelStream().map(addr -> addr.getValue()).collect(Collectors.toList());
+			return out;
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Error getting users for file " + fileId, e);
 			return null;
 		}
 	}
