@@ -11,6 +11,9 @@ contract ReticulateAuth {
     struct File {
         //the number of blocks in this file
         uint length;
+
+        //the list of users who have permission to view this file
+        address[] users;
         //the encrypted keys for each user with access
         mapping(address => Permission) permissions;
         //the sha256 checksums for specified blocks (optional)
@@ -24,6 +27,7 @@ contract ReticulateAuth {
     struct Permission {
         bytes key;
         uint level;
+        uint keyIndex;
     }
 
     ///the owner of the contract
@@ -57,10 +61,13 @@ contract ReticulateAuth {
         if (!files[fileId].isRegistered) {
             files[fileId] = File({
                 length: length,
+                users: new address[](0),
                 isRegistered: true
             });
 
-            files[fileId].permissions[msg.sender] = Permission(key, ADMIN);
+            //give the registering user permission
+            uint index = files[fileId].users.push(msg.sender);
+            files[fileId].permissions[msg.sender] = Permission(key, ADMIN, index);
 
             return true;
         } else {
@@ -75,12 +82,18 @@ contract ReticulateAuth {
         }
     }
 
+    //get a list of all users who have access to a specific file
+    function getAllUsersWithAccess(string fileId) public view returns(address[]) {
+        return files[fileId].users;
+    }
+
     ///share a file with another user
     function shareFile(string fileId, address recipient, bytes recipientKey, uint level) public {
         File storage file = files[fileId];
         //check that the sender has permission to perfrom this operation
         if (file.permissions[msg.sender].level >= ADMIN && file.permissions[msg.sender].level >= level) {
-            files[fileId].permissions[recipient] = Permission(recipientKey, level);
+            uint index = files[fileId].users.push(recipient);
+            files[fileId].permissions[recipient] = Permission(recipientKey, level, index);
         }
     }
 
@@ -89,6 +102,8 @@ contract ReticulateAuth {
         File storage file = files[fileId];
         if (file.permissions[msg.sender].level >= ADMIN
             && file.permissions[msg.sender].level >= files[fileId].permissions[revokee].level) {
+
+            delete files[fileId].users[files[fileId].permissions[revokee].keyIndex];
             delete files[fileId].permissions[revokee];
         }
     }

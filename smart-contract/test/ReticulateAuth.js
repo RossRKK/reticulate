@@ -77,6 +77,14 @@ contract('ReticulateAuth', function(accounts) {
         assert.equal(await reticulateAuth.getFileLength(fileId), fileLength);
     });
 
+    it('you should be able to get a list of all addresses for the user', async function () {
+        await reticulateAuth.shareFile(fileId, accounts[1], dummyKey, read, {from: accounts[0]});
+        let allUsers = await reticulateAuth.getAllUsersWithAccess(fileId);
+
+        assert.equal(allUsers[0], accounts[0]);
+        assert.equal(allUsers[1], accounts[1]);
+    });
+
     it('files should be able to have check sums for blocks', async function () {
         await reticulateAuth.updateCheckSum(fileId, 0, dummyCheckSum, {from: accounts[0]});
 

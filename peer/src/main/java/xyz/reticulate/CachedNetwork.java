@@ -86,6 +86,8 @@ public class CachedNetwork extends Network {
 		}
 	}
 	
+	//TODO cause share requests to wait until the file definetly exists on the network
+	
 	@Override
 	public void shutdown() {
 		//TODO ensure that all write operations complete before shutting down
