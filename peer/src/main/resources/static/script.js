@@ -1,3 +1,5 @@
+"use strict";
+
 //constants for access levels
 const NONE = 0;
 const READ = 1;
@@ -82,7 +84,7 @@ var Model = (function () {
     async function updateFileId(id) {
         fileId = id;
 
-        request = Reticulate.Net.getAccess(fileId, addr);
+        let request = Reticulate.Net.getAccess(fileId, addr);
 
         request.then(function (strLevel) {
             accessLevel = parseInt(strLevel);
@@ -304,7 +306,7 @@ var Controller = (function () {
     function handleFileId(e) {
         let fileId = $("#file-id-in").val();
         if (fileId) {
-            Model.updateFileId();
+            Model.updateFileId(fileId);
         }
     }
 

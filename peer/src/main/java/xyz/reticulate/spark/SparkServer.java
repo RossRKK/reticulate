@@ -222,8 +222,8 @@ public class SparkServer {
 	 */
 	private Route writeFile = (req, res) -> {
 		//register the file with the network
-		//net.updateFileContent(req.params(":fileId"), Base64.getDecoder().decode(req.body()));
-		net.updateFileContent(req.params(":fileId"), req.bodyAsBytes());
+		net.updateFileContent(req.params(":fileId"), Base64.getDecoder().decode(req.body()));
+		//net.updateFileContent(req.params(":fileId"), req.bodyAsBytes());
 		return "Success";
 	};
 	

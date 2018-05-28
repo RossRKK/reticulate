@@ -7,6 +7,7 @@
  *
  * Author: Ross Kelso
 */
+"use strict";
 
 const ROOT_DIR = "../dir/\n";
 
@@ -64,7 +65,7 @@ var Reticulate = (function () {
             return await $.ajax({
                 url: domain + "/file",
                 method: "POST",
-                //contentType: "application/base64",
+                contentType: "application/base64",
                 data: content,
             });
         }
