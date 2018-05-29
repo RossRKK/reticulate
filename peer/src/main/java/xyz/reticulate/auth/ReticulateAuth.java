@@ -1,5 +1,6 @@
 package xyz.reticulate.auth;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,12 +118,11 @@ public class ReticulateAuth extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    @SuppressWarnings("unchecked")
-	public RemoteCall<List<Address>> getAllUsersWithAccess(String fileId) {
+	public RemoteCall<List> getAllUsersWithAccess(String fileId) throws IOException {
         Function function = new Function("getAllUsersWithAccess", 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(fileId)), 
                 Arrays.<TypeReference<?>>asList(new TypeReference<DynamicArray<Address>>() {}));
-        return (RemoteCall<List<Address>>) executeRemoteCallSingleValueReturn(function, new ArrayList<Address>().getClass());
+        return this.executeRemoteCallSingleValueReturn(function, List.class);
     }
 
     public RemoteCall<TransactionReceipt> shareFile(String fileId, String recipient, byte[] recipientKey, BigInteger level) {

@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
@@ -280,7 +281,16 @@ public class SparkServer {
 	 * Get the users who have permission to access a file.
 	 */
 	private Route getUsers = (req, res) -> {
-		return net.getAllUsersWithAccess(req.params(":fileId"));
+		List<String> addrs = net.getAllUsersWithAccess(req.params(":fileId"));
+		/*String[] out = new String[addrs.size()];
+		
+		int i = 0;
+		for (String addr:addrs) {
+			out[i] = addr;
+			i++;
+		}*/
+		
+		return addrs;
 	};
 	
 	/**

@@ -150,7 +150,8 @@ public class PropertiesManager {
 			knownPeerPort = Reference.DEFAULT_PORT;
 			prop.setProperty("knownPeerPort", "" + knownPeerPort);
 			
-			contractAddress = "0xb8733F478bfd755BFBdc50fD2e16FC82245976B7";
+			//contractAddress = "0xb8733F478bfd755BFBdc50fD2e16FC82245976B7";
+			contractAddress = "0xBD71F105f1f1Dc487550B71EF7f83e9ba6EDF680";
 			prop.setProperty("contractAddress", contractAddress);
 			
 			userContractAddress = "0xCac3310E1f639262e4bFF7a1D891740e94e847Bf";
