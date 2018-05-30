@@ -144,7 +144,7 @@ public class PropertiesManager {
 			knownPeerId = "noodles";
 			prop.setProperty("knownPeerId", knownPeerId);
 			
-			knownPeerAddress = "noodlesfor.one";
+			knownPeerAddress = "beta.reticulate.xyz";
 			prop.setProperty("knownPeerAddress", knownPeerAddress);
 			
 			knownPeerPort = Reference.DEFAULT_PORT;

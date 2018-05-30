@@ -375,9 +375,15 @@ public class Network {
 			log.fine("File " + fileId + " length updated unecessary, was already " + file.getNumBlocks());
 		}
 		
-		fileManager.registerFile(file);
-		
 		updateChecksums(file, checkSums);
+		
+		fileManager.registerFile(file);
+		try {
+			file.saveFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**

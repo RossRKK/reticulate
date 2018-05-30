@@ -282,13 +282,6 @@ public class SparkServer {
 	 */
 	private Route getUsers = (req, res) -> {
 		List<String> addrs = net.getAllUsersWithAccess(req.params(":fileId"));
-		/*String[] out = new String[addrs.size()];
-		
-		int i = 0;
-		for (String addr:addrs) {
-			out[i] = addr;
-			i++;
-		}*/
 		
 		return addrs;
 	};
