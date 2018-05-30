@@ -333,7 +333,6 @@ public class Network {
 		log.fine("File " + id + " encrypted");
 		
 		fileManager.registerFile(file);
-		file.saveFile();
 		
 		auth.registerFile(file, file.getNumBlocks(), ((EncryptedFileBlock)file.getBlocks().get(0)).getWrappedKey());
 		
@@ -375,14 +374,17 @@ public class Network {
 			log.fine("File " + fileId + " length updated unecessary, was already " + file.getNumBlocks());
 		}
 		
+		fileManager.registerFile(file);
+		
 		updateChecksums(file, checkSums);
 		
-		fileManager.registerFile(file);
+		
+		
 		try {
 			file.saveFile();
-		} catch (IOException e) {
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
 	}
 
@@ -579,16 +581,21 @@ public class Network {
 				log.finer("Requesting block: " + fileId + ":" + block + " from " + peer.getId());
 				FileBlock out = peer.requestBlock(fileId, block);
 				
-				long time = System.currentTimeMillis() - startTime;
-				
-				log.finest("Fetch for " + fileId + ":" + block + " took " + 
-						time + "ms " + ((double)time)/out.getContent().length + "B/ms");
-				
-				fileManager.registerBlock(fileId, out);
-				tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), fileId, block);
-				
-				
-				return out;
+				//check that the checksums match otherwise use a different peer
+				if (auth.compareCheckSum(fileId, out.getIndex(), out.getChecksum())) {
+					long time = System.currentTimeMillis() - startTime;
+					
+					log.finest("Fetch for " + fileId + ":" + block + " took " + 
+							time + "ms " + ((double)time)/out.getContent().length + "B/ms");
+					
+					fileManager.registerBlock(fileId, out);
+					tracker.registerTransfer(Application.getPropertiesManager().getPeerId(), fileId, block);
+					
+					
+					return out;
+				} else {
+					peerIds.remove(peerId);
+				}
 			} catch (Exception e) {
 				log.warning("Peer " + peerId + " caused " + e.getMessage());
 				peerIds.remove(peerId);

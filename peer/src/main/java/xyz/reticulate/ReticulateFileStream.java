@@ -276,7 +276,6 @@ class  BlockFetcher implements Runnable {
 				byte[] checkSum = block.getChecksum();
 				
 		        //check if the checksum is correct
-		        //FIXME checksum checking doesn't work
 				if (auth.compareCheckSum(fileId, block.getIndex(), checkSum)) {
 					
 					long time = System.currentTimeMillis() - startTime;
@@ -312,7 +311,14 @@ class  BlockFetcher implements Runnable {
 	private FileBlock getBlock(String fileId, int block) throws ProtocolException, NoValidPeersException {
 		//attempt to load a local copy of the file block
 		FileBlock local = fm.getFileBlock(fileId, block);
-		if (local != null) {
+		boolean localIsValid;
+		try {
+			localIsValid = auth.compareCheckSum(fileId, block, local.getChecksum());
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			localIsValid = false;
+		}
+		if (local != null && localIsValid) {
 			//return the local file if we have it
 			return local;
 		} else {

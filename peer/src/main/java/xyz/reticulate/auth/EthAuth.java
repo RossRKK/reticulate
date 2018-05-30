@@ -220,7 +220,7 @@ public class EthAuth implements IAuthenticator {
 		}
 		
 		if (!correct) {
-			log.finer("Failed checksum comparison for " + fileId + ":" + blockIndex + ", Expected " + Base64.getEncoder().encodeToString(checkSum) + " to equal " + Base64.getEncoder().encodeToString(correctSum));
+			log.warning("Failed checksum comparison for " + fileId + ":" + blockIndex + ", Expected " + Base64.getEncoder().encodeToString(checkSum) + " to equal " + Base64.getEncoder().encodeToString(correctSum));
 		}
 		
 		return correct;

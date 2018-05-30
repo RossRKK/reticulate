@@ -95,11 +95,12 @@ public class Worker implements Runnable {
 			for (FileBlock block: file.getBlocks().values()) {
 				
 				//check that the checksum is up to date
-				ensureCorrectChecksum(file, fm.getFileBlock(file.getId(), block.getIndex()));
+				boolean upToDate = ensureCorrectChecksum(file, fm.getFileBlock(file.getId(), block.getIndex()));
 				
-				
-				//ensure that redundant copies of this file block exist
-				ensureRedundancy(file, block, r);
+				if (upToDate) {
+					//ensure that redundant copies of this file block exist
+					ensureRedundancy(file, block, r);
+				}
 			}
 		}
 	}
@@ -109,7 +110,7 @@ public class Worker implements Runnable {
 	 * @param file The file being checked.
 	 * @param block The specific block being checked.
 	 */
-	private void ensureCorrectChecksum(ReticulateFile file, FileBlock block) {
+	private boolean ensureCorrectChecksum(ReticulateFile file, FileBlock block) {
 		try {
 			if (!auth.compareCheckSum(file.getId(), block.getIndex(), block.getChecksum())) {
 				log.log(Level.FINE,"File Block " + file.getId() + ":" + block.getIndex() + " is out of date");
@@ -118,12 +119,17 @@ public class Worker implements Runnable {
 					net.downloadBlock(file.getId(), block.getIndex());
 
 					log.log(Level.FINE,"File Block " + file.getId() + ":" + block.getIndex() + " updated.");
+					return true;
 				} catch (NoValidPeersException e) {
 					log.log(Level.WARNING, "File Block " + file.getId() + ":" + block.getIndex() + " couldn't be updated, no valid peers.");
+					return false;
 				}
+			} else {
+				return true;
 			}
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
+			return false;
 		}
 	}
 	
