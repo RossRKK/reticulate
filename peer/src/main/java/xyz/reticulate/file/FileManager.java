@@ -147,6 +147,8 @@ public class FileManager {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			} else {
+				System.out.println("Recieved " + fileId + ":" + block.index + " but it didn't have a valid checksum");
 			}
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
