@@ -85,6 +85,11 @@ public class FileManager {
 	 */
 	public void registerFile(ReticulateFile file) {
 		availableFiles.put(file.getId(), file);
+		try {
+			file.saveFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

@@ -41,7 +41,7 @@ public class Worker implements Runnable {
 
 	public Worker(Network net, IAuthenticator auth, FileManager fm, ITracker t, int redun) {
 		super();
-		log.setLevel(Level.INFO);
+		log.setLevel(Level.ALL);
 		this.net = net;
 		this.redun = redun;
 		this.t = t;
@@ -96,6 +96,7 @@ public class Worker implements Runnable {
 				
 				//check that the checksum is up to date
 				ensureCorrectChecksum(file, fm.getFileBlock(file.getId(), block.getIndex()));
+				
 				
 				//ensure that redundant copies of this file block exist
 				ensureRedundancy(file, block, r);
